@@ -7,6 +7,7 @@
 
 #include "board.h"
 #include "print.h"
+#include "move.h"
 
 int max(int a, int b) {
     if (a > b) {
@@ -21,11 +22,6 @@ int min(int a, int b) {
     }
     return b;
 }
-
-typedef struct move {
-    int color;
-    int square[28]; /* integers of possible squares */
-} *move;
 
 int coord2int(char coord[static 2]) {
     int c = 0;
