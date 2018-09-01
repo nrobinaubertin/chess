@@ -6,7 +6,7 @@ LDFLAGS=
 
 all: chess
 
-chess: chess.o
+chess: chess.o board.o print.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 .PHONY: clean
