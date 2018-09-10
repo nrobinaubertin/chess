@@ -58,23 +58,27 @@ int coord2int(char coord[static 2]) {
     return c;
 }
 
+// char coord[static 2] int2coord(int k) {
+//     int k = 21 + j + 10*i;
+// }
+
 int main(int argc, char* argv[]) {
-    board b = malloc(sizeof(struct board));
+    board b = create_board();
     assert(b);
     b = init_board(b);
     print_board(b);
 
-    char coord[3];
-    int k;
-    while (true) {
-        printf("square: ");
-        scanf(" %c%c", &coord[0], &coord[1]);
-        k = coord2int(coord);
-        printf("%d ", k);
-        print_square(b->color[k], b->piece[k]);
-        printf("\n");
-    }
+    // char coord[3];
+    // int k;
+    // while (true) {
+    //     printf("square: ");
+    //     scanf(" %c%c", &coord[0], &coord[1]);
+    //     k = coord2int(coord);
+    //     printf("%d ", k);
+    //     print_square(b->color[k], b->piece[k]);
+    //     printf("\n");
+    // }
 
-    free(&b);
+    destroy_board(b);
     return EXIT_SUCCESS;
 }
