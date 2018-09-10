@@ -2,7 +2,11 @@
 #include "board.h"
 
 typedef struct move {
-    int square[30]; /* integers of possible squares */
+    int start;
+    int end;
 } *move;
 
-move gen_move(board b, int square);
+move* create_move_list();
+void destroy_move_list(move* ml);
+move rand_move(board b, int color);
+move* gen_move_list(board b, int square);
