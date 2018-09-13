@@ -58,9 +58,13 @@ int coord2int(char coord[static 2]) {
     return c;
 }
 
-// char coord[static 2] int2coord(int k) {
-//     int k = 21 + j + 10*i;
-// }
+char* int2coord(int k) {
+    int i = (k - 21)/10;
+    int j = k - 21 - 10 * i;
+    char c[8] = "abcdefgh";
+    char coord[2] = {c[j], i + 49};
+    return coord;
+}
 
 int main(int argc, char* argv[]) {
     board b = create_board();
@@ -80,5 +84,7 @@ int main(int argc, char* argv[]) {
     // }
 
     destroy_board(b);
+    char* coord = int2coord(atoi(argv[1]));
+    printf("%c%c\n", coord[0], coord[1]);
     return EXIT_SUCCESS;
 }

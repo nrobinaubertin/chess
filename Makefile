@@ -1,7 +1,7 @@
 CC=clang
-CFLAGS=-DNDEBUG -O3 -Wall -Wno-unused-result -std=c11 -pedantic
+CFLAGS=-DNDEBUG -O3 -Wall -Wno-unused-result -std=c11 -pedantic -Wno-return-stack-address
 # debug flags
-CDFLAGS=-ggdb -Wall -Wno-unused-result -std=c11 -pedantic
+CDFLAGS=-ggdb -Wall -Wno-unused-result -std=c11 -pedantic -Wno-return-stack-address
 LDFLAGS=
 
 all: chess
