@@ -2,6 +2,8 @@
 
 #include "print.h"
 #include "board.h"
+#include "util.h"
+#include "move.h"
 
 void print_square(int color, int piece) {
     if (color == 1) {
@@ -77,4 +79,16 @@ void print_board(board b) {
         printf("%c ", letter[i]);
     }
     printf("\n");
+}
+
+void print_int2coord(int k) {
+    char* c = int2coord(k);
+    printf("%c%c\n", c[0], c[1]);
+}
+
+void print_move(move m) {
+    char* c1 = int2coord(m->start);
+    char* c2 = int2coord(m->end);
+    printf("%c%c -> %c%c (%d -> %d)\n", c1[0], c1[1], c2[0], c2[1], m->start, m->end);
+    // printf("%c%c -> %c%c (%d -> %d)\n", c1[0], c1[1], c2[0], c2[1]);
 }
