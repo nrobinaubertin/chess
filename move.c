@@ -198,4 +198,7 @@ void apply_move(move m, board b) {
     b->color[m->start] = 0;
     b->piece[m->end] = b->piece[m->start];
     b->piece[m->start] = 7;
+    // pawn promotion to queen
+    if (b->piece[m->end] == 1 && (m->end/10 == 2 || m->end/10 == 9))
+        b->piece[m->end] = 5;
 }
