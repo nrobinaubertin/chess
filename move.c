@@ -25,6 +25,13 @@ move* create_move_list() {
     return ml;
 }
 
+move copy_move(move m) {
+    move mm = malloc(sizeof(struct move));
+    mm->start = m->start;
+    mm->end = m->end;
+    return mm;
+}
+
 void destroy_move_list(move* ml) {
     if (ml) {
         for (int i = 0; i < 100; i++) {
@@ -46,12 +53,12 @@ move rand_move(board b, int color) {
                 if (ms) {
                     int it = 0;
                     while (ms[it]) {
-                        ml[n] = ms[it];
+                        ml[n] = copy_move(ms[it]);
                         it++;
                         n++;
                     }
                 }
-                // destroy_move_list(ms);
+                destroy_move_list(ms);
             }
         }
     }
@@ -238,6 +245,7 @@ bool is_square_checked(board b, int color, int square) {
     for(int i = 0; i < 4; i++) {
         for(int inv = -1; inv <= 1; inv += 2) {
             if (b->piece[inv*ray[0][i]] == 2 && b->color[inv*ray[0][i]] == color*-1) {
+                destroy_board(vb);
                 return true;
             }
         }
@@ -256,6 +264,7 @@ bool is_square_checked(board b, int color, int square) {
                     || b->piece[square + inv*ray[2][i] * k] == 5
                 )
             ) {
+                destroy_board(vb);
                 return true;
             }
         }
@@ -270,6 +279,7 @@ bool is_square_checked(board b, int color, int square) {
                 && b->color[square + inv*ray[2][i]] == color*-1
                 && b->piece[square + inv*ray[2][i]] == 1
             ) {
+                destroy_board(vb);
                 return true;
             }
             while (b->piece[square + inv*ray[2][i] * k] == 7) {
@@ -282,10 +292,12 @@ bool is_square_checked(board b, int color, int square) {
                     || b->piece[square + inv*ray[2][i] * k] == 5
                 )
             ) {
+                destroy_board(vb);
                 return true;
             }
         }
     }
+    destroy_board(vb);
     return false;
 }
 

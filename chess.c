@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
     int max_t = 0;
     int seed = 0;
 
-    for(int s = 300; s < 800; s++) {
+    for(int s = 300; s < 900; s++) {
 
         srand(s);
         // srand((unsigned) time(NULL));

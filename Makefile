@@ -15,4 +15,4 @@ clean:
 	rm -rf *.o && rm chess
 
 %.o: %.c
-	$(CC) -o $@ -c $< $(CDFLAGS)
+	$(CC) -o $@ -c $< $(CFLAGS)
