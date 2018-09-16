@@ -171,7 +171,7 @@ move* gen_move_list(board b, int square) {
             }
             return ml;
         case 2: // KNIGHT
-            add_point_moves(b, ml, 2, square);
+            add_point_moves(b, ml, 0, square);
             return ml;
         case 3: // BISHOP
             add_ray_moves(b, ml, 1, square);
@@ -396,7 +396,7 @@ void apply_move(move m, board b) {
             }
             break;
         case 4:
-            // rock move
+            // rook move
             if (b->color[m->end] == 1) {
                 if (m->start == 21) {
                     b->castling_rights[0] = false;
