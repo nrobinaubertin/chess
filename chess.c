@@ -64,6 +64,9 @@ move best_move(board b, int color, int depth) {
         board bb = copy_board(b);
         apply_move(ml[i], bb);
         int score = -negamax(bb, color*-1, depth - 1);
+        // printf("\n");
+        // print_move(ml[i]);
+        // printf("score: %d\n", score);
         if (score > max) {
             max = score;
             best_move = ml[i];
@@ -85,14 +88,24 @@ int main(int argc, char* argv[]) {
     print_board(b);
 
     int color = 1;
-    move m = best_move(b, color, atoi(argv[1]));
-    printf("\n");
-    print_move(m);
-    printf("\n");
-    apply_move(m, b);
-    print_board(b);
-    free(m);
+    int w = 0;
+    while (!(w = is_game_over(b))) {
+        move m = best_move(b, color, atoi(argv[1]));
+        printf("\n");
+        print_move(m);
+        printf("\n");
+        apply_move(m, b);
+        print_board(b);
+        free(m);
+        color *= -1;
+    }
     destroy_board(b);
+
+    if (w == 1) {
+        printf("White wins !\n");
+    } else {
+        printf("Black wins !\n");
+    }
 
     // char coord[3];
     // int k;
