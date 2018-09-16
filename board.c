@@ -13,6 +13,14 @@ board create_board() {
     return b;
 }
 
+board copy_board(board b) {
+    board bb = create_board();
+    memcpy(bb->color, b->color, sizeof(int) * 120);
+    memcpy(bb->piece, b->piece, sizeof(int) * 120);
+    memcpy(bb->king_square, b->king_square, sizeof(int) * 2);
+    return bb;
+}
+
 void destroy_board(board b) {
     if (b) {
         if (b->color)
@@ -52,6 +60,11 @@ board init_board(board b) {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     }, sizeof(int) * 120);
+    b->king_square[0] = 25;
+    b->king_square[1] = 95;
+    b->castling_rights[0] = true;
+    b->castling_rights[1] = true;
+    b->castling_rights[2] = true;
+    b->castling_rights[3] = true;
     return b;
 }
-
