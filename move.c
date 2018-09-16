@@ -74,6 +74,16 @@ move* gen_move_list(board b, int square) {
                 m->end = square + 10 * color;
                 ml[nb_moves] = m;
                 nb_moves++;
+                if (
+                    (square/10 == 3 || square/10 == 8)
+                    && b->piece[square + 20 * color] == 7
+                ) {
+                    move m = malloc(sizeof(struct move));
+                    m->start = square;
+                    m->end = square + 20 * color;
+                    ml[nb_moves] = m;
+                    nb_moves++;
+                }
             }
             if (b->color[square + 10 * color + 1] == color * -1) {
                 move m = malloc(sizeof(struct move));
