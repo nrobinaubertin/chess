@@ -17,3 +17,4 @@ void add_point_moves(board b, move* ml, int piece_type, int square);
 bool is_square_checked(board b, int color, int square);
 int add_castle_moves(board b, move* ml, int nb_moves, int color);
 move copy_move(move m);
+move* gen_all_moves(board b, int color);

@@ -11,6 +11,7 @@
 #include "board.h"
 #include "print.h"
 #include "move.h"
+#include "evaluate.h"
 
 int is_game_over(board b) {
     bool white = false;
@@ -35,50 +36,63 @@ int is_game_over(board b) {
     return -1;
 }
 
+int negamax(board b, int color, int depth) {
+    if (depth == 0 || is_game_over(b))
+        return evaluate(b, color);
+    int max = -100000;
+    move* ml = gen_all_moves(b, color);
+    int i = 0;
+    while (ml[i] != NULL) {
+        board bb = copy_board(b);
+        apply_move(ml[i], bb);
+        int score = -negamax(bb, color*-1, depth - 1);
+        if (score > max)
+            max = score;
+        destroy_board(bb);
+        i++;
+    }
+    destroy_move_list(ml);
+    return max;
+}
+
+move best_move(board b, int color, int depth) {
+    move best_move = NULL;
+    int max = -10000;
+    move* ml = gen_all_moves(b, color);
+    int i = 0;
+    while (ml[i] != NULL) {
+        board bb = copy_board(b);
+        apply_move(ml[i], bb);
+        int score = -negamax(bb, color*-1, depth - 1);
+        if (score > max) {
+            max = score;
+            best_move = ml[i];
+        }
+        destroy_board(bb);
+        i++;
+    }
+    best_move = copy_move(best_move);
+    destroy_move_list(ml);
+    return best_move;
+}
+
 int main(int argc, char* argv[]) {
 
-    int max_t = 0;
-    int seed = 0;
+    //srand((unsigned) time(NULL));
+    board b = create_board();
+    assert(b);
+    b = init_board(b);
+    print_board(b);
 
-    for(int s = 300; s < 900; s++) {
-
-        srand(s);
-        // srand((unsigned) time(NULL));
-
-        board b = create_board();
-        assert(b);
-        b = init_board(b);
-        //print_board(b);
-
-        int color = 1;
-        int w = 0;
-        int turn = 0;
-        while(! (w = is_game_over(b))) {
-            move m = rand_move(b, color);
-            // printf("\n");
-            // print_move(m);
-            // printf("\n");
-            apply_move(m, b);
-            // print_board(b);
-            // sleep(2);
-            color *= -1;
-            turn++;
-            free(m);
-        }
-
-        if (turn > max_t) {
-            max_t = turn;
-            seed = s;
-        }
-        destroy_board(b);
-    // if (w == 1) {
-    //     printf("White wins !\n");
-    // } else {
-    //     printf("Black wins !\n");
-    // }
-    // printf("The play lasted %d turns.\n", turn);
-    }
-    printf("%d %d\n", seed, max_t);
+    int color = 1;
+    move m = best_move(b, color, atoi(argv[1]));
+    printf("\n");
+    print_move(m);
+    printf("\n");
+    apply_move(m, b);
+    print_board(b);
+    free(m);
+    destroy_board(b);
 
     // char coord[3];
     // int k;

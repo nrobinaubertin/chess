@@ -42,6 +42,30 @@ void destroy_move_list(move* ml) {
     }
 }
 
+move* gen_all_moves(board b, int color) {
+    move* ml = create_move_list();
+    int n = 0;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            int k = 21 + j + 10*i;
+            if (b->color[k] == color) {
+                move* ms = gen_move_list(b, k);
+                if (ms) {
+                    int it = 0;
+                    while (ms[it]) {
+                        ml[n] = copy_move(ms[it]);
+                        it++;
+                        n++;
+                    }
+                }
+                destroy_move_list(ms);
+            }
+        }
+    }
+    n = add_castle_moves(b, ml, n, color);
+    return ml;
+}
+
 move rand_move(board b, int color) {
     move* ml = create_move_list();
     int n = 0;
