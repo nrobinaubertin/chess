@@ -55,6 +55,7 @@ move rand_move(board b, int color) {
             }
         }
     }
+    n = add_castle_moves(b, ml, n, color);
     move m = malloc(sizeof(struct move));
     assert(m);
     memcpy(m, ml[rand()%n], sizeof(struct move));
@@ -158,6 +159,67 @@ move* gen_move_list(board b, int square) {
     }
 }
 
+int add_castle_moves(board b, move* ml, int nb_moves, int color) {
+    if (color == 1) {
+        if (
+            b->castling_rights[1]
+            && b->piece[21] == 4
+            && b->color[21] == 1
+            && b->color[22] == 0
+            && b->color[23] == 0
+            && b->color[24] == 0
+            && !is_square_checked(b, 1, 25)
+            && !is_square_checked(b, 1, 24)
+            && !is_square_checked(b, 1, 23)
+        ) {
+            add_move_to_ml(ml, nb_moves, b->king_square[0], 101);
+            nb_moves++;
+        }
+        if (
+            b->castling_rights[0]
+            && b->piece[28] == 4
+            && b->color[28] == 1
+            && b->color[27] == 0
+            && b->color[26] == 0
+            && !is_square_checked(b, 1, 25)
+            && !is_square_checked(b, 1, 26)
+            && !is_square_checked(b, 1, 27)
+        ) {
+            add_move_to_ml(ml, nb_moves, b->king_square[0], 100);
+            nb_moves++;
+        }
+    } else {
+        if (
+            b->castling_rights[3]
+            && b->piece[91] == 4
+            && b->color[91] == -1
+            && b->color[92] == 0
+            && b->color[93] == 0
+            && b->color[94] == 0
+            && !is_square_checked(b, -1, 95)
+            && !is_square_checked(b, -1, 94)
+            && !is_square_checked(b, -1, 93)
+        ) {
+            add_move_to_ml(ml, nb_moves, b->king_square[0], 103);
+            nb_moves++;
+        }
+        if (
+            b->castling_rights[2]
+            && b->piece[98] == 4
+            && b->color[98] == -1
+            && b->color[97] == 0
+            && b->color[96] == 0
+            && !is_square_checked(b, 1, 95)
+            && !is_square_checked(b, 1, 96)
+            && !is_square_checked(b, 1, 97)
+        ) {
+            add_move_to_ml(ml, nb_moves, b->king_square[0], 102);
+            nb_moves++;
+        }
+    }
+    return nb_moves;
+}
+
 // this function places a virtual king of the chosen color of the chose square
 // and tests if he is in check
 bool is_square_checked(board b, int color, int square) {
@@ -165,8 +227,13 @@ bool is_square_checked(board b, int color, int square) {
     // we can maybe be faster by manipulating the given board...?
     board vb = copy_board(b);
     // remove the king
-    vb->piece[vb->king_square[-1*color+1]] = 7;
-    vb->color[vb->king_square[-1*color+1]] = 0;
+    if (color == 1) {
+        vb->piece[vb->king_square[0]] = 7;
+        vb->color[vb->king_square[0]] = 0;
+    } else {
+        vb->piece[vb->king_square[1]] = 7;
+        vb->color[vb->king_square[1]] = 0;
+    }
     // 1. check if a knight threatens the square
     for(int i = 0; i < 4; i++) {
         for(int inv = -1; inv <= 1; inv += 2) {
@@ -223,6 +290,52 @@ bool is_square_checked(board b, int color, int square) {
 }
 
 void apply_move(move m, board b) {
+    // is it a castle move ?
+    if (m->end >= 100) {
+        switch (m->end) {
+            case 100:
+                b->color[25] = 0;
+                b->piece[25] = 7;
+                b->color[28] = 0;
+                b->piece[28] = 7;
+                b->color[27] = 1;
+                b->piece[27] = 6;
+                b->color[26] = 1;
+                b->piece[26] = 4;
+                break;
+            case 101:
+                b->color[25] = 0;
+                b->piece[25] = 7;
+                b->color[21] = 0;
+                b->piece[21] = 7;
+                b->color[23] = 1;
+                b->piece[23] = 6;
+                b->color[24] = 1;
+                b->piece[24] = 4;
+                break;
+            case 102:
+                b->color[95] = 0;
+                b->piece[95] = 7;
+                b->color[98] = 0;
+                b->piece[98] = 7;
+                b->color[97] = -1;
+                b->piece[97] = 6;
+                b->color[96] = -1;
+                b->piece[96] = 4;
+                break;
+            case 103:
+                b->color[95] = 0;
+                b->piece[95] = 7;
+                b->color[91] = 0;
+                b->piece[91] = 7;
+                b->color[93] = -1;
+                b->piece[93] = 6;
+                b->color[94] = -1;
+                b->piece[94] = 4;
+                break;
+        }
+        return;
+    }
     b->color[m->end] = b->color[m->start];
     b->color[m->start] = 0;
     b->piece[m->end] = b->piece[m->start];
