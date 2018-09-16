@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "move.h"
 #include "print.h"
@@ -75,12 +76,13 @@ void add_ray_moves(board b, move* ml, int piece_type, int square) {
     while(ray[piece_type][i] != 0) {
         for(int inv = -1; inv <= 1; inv += 2) {
             int k = 1;
-            while (
+            while ( // stops when out of borders or blocked by same color pieces
                 b->piece[square + inv*ray[piece_type][i] * k] != 0
                 && b->color[square + inv*ray[piece_type][i] * k] != color
             ) {
                 add_move_to_ml(ml, nb_moves, square, square + inv*ray[piece_type][i] * k);
                 nb_moves++;
+                // if we eat an enemy piece, end the ray
                 if (b->piece[square + inv*ray[piece_type][i] * k] == color * -1) {
                     break;
                 }
@@ -156,12 +158,111 @@ move* gen_move_list(board b, int square) {
     }
 }
 
+// this function places a virtual king of the chosen color of the chose square
+// and tests if he is in check
+bool is_square_checked(board b, int color, int square) {
+    // create virtual board
+    // we can maybe be faster by manipulating the given board...?
+    board vb = copy_board(b);
+    // remove the king
+    vb->piece[vb->king_square[-1*color+1]] = 7;
+    vb->color[vb->king_square[-1*color+1]] = 0;
+    // 1. check if a knight threatens the square
+    for(int i = 0; i < 4; i++) {
+        for(int inv = -1; inv <= 1; inv += 2) {
+            if (b->piece[inv*ray[0][i]] == 2 && b->color[inv*ray[0][i]] == color*-1) {
+                return true;
+            }
+        }
+    }
+    // 2. ray-check in cardinal directions for an enemy piece
+    for(int i = 0; i < 2; i++) {
+        for(int inv = -1; inv <= 1; inv += 2) {
+            int k = 1;
+            while (b->piece[square + inv*ray[2][i] * k] == 7) {
+                k++;
+            }
+            if (
+                b->color[square + inv*ray[2][i] * k] == color*-1
+                && (
+                    b->piece[square + inv*ray[2][i] * k] == 4
+                    || b->piece[square + inv*ray[2][i] * k] == 5
+                )
+            ) {
+                return true;
+            }
+        }
+    }
+    // 3. ray-check in diagonal directions for an enemy piece
+    for(int i = 0; i < 2; i++) {
+        for(int inv = -1; inv <= 1; inv += 2) {
+            int k = 1;
+            // special check for pawns
+            if (
+                inv == color
+                && b->color[square + inv*ray[2][i]] == color*-1
+                && b->piece[square + inv*ray[2][i]] == 1
+            ) {
+                return true;
+            }
+            while (b->piece[square + inv*ray[2][i] * k] == 7) {
+                k++;
+            }
+            if (
+                b->color[square + inv*ray[2][i] * k] == color*-1
+                && (
+                    b->piece[square + inv*ray[2][i] * k] == 3
+                    || b->piece[square + inv*ray[2][i] * k] == 5
+                )
+            ) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void apply_move(move m, board b) {
     b->color[m->end] = b->color[m->start];
     b->color[m->start] = 0;
     b->piece[m->end] = b->piece[m->start];
     b->piece[m->start] = 7;
-    // pawn promotion to queen
-    if (b->piece[m->end] == 1 && (m->end/10 == 2 || m->end/10 == 9))
-        b->piece[m->end] = 5;
+    // special cases
+    switch (b->piece[m->end]) {
+        case 1:
+            // pawn promotion to queen
+            if ((m->end/10 == 2 || m->end/10 == 9))
+                b->piece[m->end] = 5;
+            break;
+        case 6:
+            // king move
+            if (b->color[m->end] == 1) {
+                b->king_square[0] = m->end;
+                b->castling_rights[0] = false;
+                b->castling_rights[1] = false;
+            } else {
+                b->king_square[1] = m->end;
+                b->castling_rights[2] = false;
+                b->castling_rights[3] = false;
+            }
+            break;
+        case 4:
+            // rock move
+            if (b->color[m->end] == 1) {
+                if (m->start == 21) {
+                    b->castling_rights[0] = false;
+                }
+                if (m->start == 28) {
+                    b->castling_rights[1] = false;
+                }
+            } else {
+                if (m->start == 91) {
+                    b->castling_rights[2] = false;
+                }
+                if (m->start == 98) {
+                    b->castling_rights[3] = false;
+                }
+            }
+            break;
+    }
 }

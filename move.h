@@ -14,3 +14,4 @@ void apply_move(move m, board b);
 void add_move_to_ml(move* ml, int nb_moves, int start, int end);
 void add_ray_moves(board b, move* ml, int piece_type, int square);
 void add_point_moves(board b, move* ml, int piece_type, int square);
+bool is_square_checked(board b, int color, int square);
