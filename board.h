@@ -6,6 +6,7 @@ typedef struct board {
     int* piece; /* NOT USED, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING, EMPTY */
     int king_square[2];
     bool castling_rights[4];
+    int who; // who's turn it is (color);
 } *board;
 board init_board(board b);
 board create_board();

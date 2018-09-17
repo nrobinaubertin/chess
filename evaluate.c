@@ -79,8 +79,9 @@ const int eval_queen[120] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-int evaluate(board b, int color) {
+int evaluate(board b) {
     int score = 0;
+    int color = b->who;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             int k = 21 + j + 10*i;

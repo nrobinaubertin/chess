@@ -19,6 +19,7 @@ board copy_board(board b) {
     memcpy(bb->piece, b->piece, sizeof(int) * 120);
     memcpy(bb->king_square, b->king_square, sizeof(int) * 2);
     memcpy(bb->castling_rights, b->castling_rights, sizeof(int) * 4);
+    bb->who = b->who;
     return bb;
 }
 
@@ -67,5 +68,6 @@ board init_board(board b) {
     b->castling_rights[1] = true;
     b->castling_rights[2] = true;
     b->castling_rights[3] = true;
+    b->who = 1;
     return b;
 }

@@ -42,7 +42,8 @@ void destroy_move_list(move* ml) {
     }
 }
 
-move* gen_all_moves(board b, int color) {
+move* gen_all_moves(board b) {
+    int color = b->who;
     move* ml = create_move_list();
     int n = add_castle_moves(b, ml, 0, color);
     for (int i = 0; i < 8; i++) {
@@ -56,7 +57,8 @@ move* gen_all_moves(board b, int color) {
     return ml;
 }
 
-move rand_move(board b, int color) {
+move rand_move(board b) {
+    int color = b->who;
     move* ml = create_move_list();
     int n = 0;
     for (int i = 0; i < 8; i++) {
@@ -327,6 +329,7 @@ bool is_square_checked(board b, int color, int square) {
 }
 
 void apply_move(move m, board b) {
+    b->who *= -1;
     // is it a castle move ?
     if (m->end >= 100) {
         switch (m->end) {

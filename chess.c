@@ -36,16 +36,16 @@ int is_game_over(board b) {
     return -1;
 }
 
-int negamax(board b, int color, int depth) {
+int negamax(board b, int depth) {
     if (depth == 0 || is_game_over(b))
-        return evaluate(b, color);
+        return evaluate(b);
     int max = -100000;
-    move* ml = gen_all_moves(b, color);
+    move* ml = gen_all_moves(b);
     int i = 0;
     while (ml[i] != NULL) {
         board bb = copy_board(b);
         apply_move(ml[i], bb);
-        int score = -negamax(bb, color*-1, depth - 1);
+        int score = -negamax(bb, depth - 1);
         if (score > max)
             max = score;
         destroy_board(bb);
@@ -55,18 +55,18 @@ int negamax(board b, int color, int depth) {
     return max;
 }
 
-move best_move(board b, int color, int depth) {
+move best_move(board b, int depth) {
     move best_move = NULL;
     int max = -10000;
-    move* ml = gen_all_moves(b, color);
+    move* ml = gen_all_moves(b);
     int i = 0;
     while (ml[i] != NULL) {
         board bb = copy_board(b);
         apply_move(ml[i], bb);
-        int score = -negamax(bb, color*-1, depth - 1);
-        // printf("\n");
-        // print_move(ml[i]);
-        // printf("score: %d\n", score);
+        int score = -negamax(bb, depth - 1);
+        printf("\n");
+        print_move(ml[i]);
+        printf("score: %d\n", score);
         if (score > max) {
             max = score;
             best_move = ml[i];
@@ -87,17 +87,24 @@ int main(int argc, char* argv[]) {
     b = init_board(b);
     print_board(b);
 
-    int color = 1;
+    move m = best_move(b, atoi(argv[1]));
+    printf("\n");
+    print_move(m);
+    printf("\n");
+    apply_move(m, b);
+    print_board(b);
+    free(m);
+    destroy_board(b);
+    /*
     int w = 0;
     while (!(w = is_game_over(b))) {
-        move m = best_move(b, color, atoi(argv[1]));
+        move m = best_move(b, atoi(argv[1]));
         printf("\n");
         print_move(m);
         printf("\n");
         apply_move(m, b);
         print_board(b);
         free(m);
-        color *= -1;
     }
     destroy_board(b);
 
@@ -106,6 +113,7 @@ int main(int argc, char* argv[]) {
     } else {
         printf("Black wins !\n");
     }
+    */
 
     // char coord[3];
     // int k;
