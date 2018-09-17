@@ -18,6 +18,7 @@ board copy_board(board b) {
     memcpy(bb->color, b->color, sizeof(int) * 120);
     memcpy(bb->piece, b->piece, sizeof(int) * 120);
     memcpy(bb->king_square, b->king_square, sizeof(int) * 2);
+    memcpy(bb->castling_rights, b->castling_rights, sizeof(int) * 4);
     return bb;
 }
 
