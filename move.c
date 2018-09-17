@@ -49,16 +49,7 @@ move* gen_all_moves(board b, int color) {
         for (int j = 0; j < 8; j++) {
             int k = 21 + j + 10*i;
             if (b->color[k] == color) {
-                move* ms = gen_move_list(b, k);
-                if (ms) {
-                    int it = 0;
-                    while (ms[it]) {
-                        ml[n] = copy_move(ms[it]);
-                        it++;
-                        n++;
-                    }
-                }
-                destroy_move_list(ms);
+                n = add_move_list(b, k, ml, n);
             }
         }
     }
@@ -73,16 +64,7 @@ move rand_move(board b, int color) {
         for (int j = 0; j < 8; j++) {
             int k = 21 + j + 10*i;
             if (b->color[k] == color) {
-                move* ms = gen_move_list(b, k);
-                if (ms) {
-                    int it = 0;
-                    while (ms[it]) {
-                        ml[n] = copy_move(ms[it]);
-                        it++;
-                        n++;
-                    }
-                }
-                destroy_move_list(ms);
+                n = add_move_list(b, k, ml, n);
             }
         }
     }
@@ -94,16 +76,15 @@ move rand_move(board b, int color) {
     return m;
 }
 
-void add_move_to_ml(move* ml, int nb_moves, int start, int end) {
+void add_move_to_ml(move* ml, int n, int start, int end) {
     move m = malloc(sizeof(struct move));
     m->start = start;
     m->end = end;
-    ml[nb_moves] = m;
+    ml[n] = m;
 }
 
-void add_ray_moves(board b, move* ml, int piece_type, int square) {
+int add_ray_moves(board b, move* ml, int n, int piece_type, int square) {
     int i = 0;
-    int nb_moves = 0;
     int color = b->color[square];
     while(ray[piece_type][i] != 0) {
         for(int inv = -1; inv <= 1; inv += 2) {
@@ -112,8 +93,8 @@ void add_ray_moves(board b, move* ml, int piece_type, int square) {
                 b->piece[square + inv*ray[piece_type][i] * k] != 0
                 && b->color[square + inv*ray[piece_type][i] * k] != color
             ) {
-                add_move_to_ml(ml, nb_moves, square, square + inv*ray[piece_type][i] * k);
-                nb_moves++;
+                add_move_to_ml(ml, n, square, square + inv*ray[piece_type][i] * k);
+                n++;
                 // if we eat an enemy piece, end the ray
                 if (b->piece[square + inv*ray[piece_type][i] * k] == color * -1) {
                     break;
@@ -123,11 +104,11 @@ void add_ray_moves(board b, move* ml, int piece_type, int square) {
         }
         i++;
     }
+    return n;
 }
 
-void add_point_moves(board b, move* ml, int piece_type, int square) {
+int add_point_moves(board b, move* ml, int n, int piece_type, int square) {
     int i = 0;
-    int nb_moves = 0;
     int color = b->color[square];
     while(ray[piece_type][i] != 0) {
         for(int inv = -1; inv <= 1; inv += 2) {
@@ -135,58 +116,57 @@ void add_point_moves(board b, move* ml, int piece_type, int square) {
                 b->color[square + inv*ray[piece_type][i]] == color * -1
                 || b->piece[square + inv*ray[piece_type][i]] == 7
             ) {
-                add_move_to_ml(ml, nb_moves, square, square + inv*ray[piece_type][i]);
-                nb_moves++;
+                add_move_to_ml(ml, n, square, square + inv*ray[piece_type][i]);
+                n++;
             }
         }
         i++;
     }
+    return n;
 }
 
-move* gen_move_list(board b, int square) {
-    move* ml = create_move_list();
+int add_move_list(board b, int square, move* ml, int n) {
     int piece = b->piece[square];
     int color = b->color[square];
-    int nb_moves = 0;
     switch (piece) {
         case 1: // PAWN
             if (b->piece[square + 10 * color] == 7) {
-                add_move_to_ml(ml, nb_moves, square, square + 10*color);
-                nb_moves++;
+                add_move_to_ml(ml, n, square, square + 10*color);
+                n++;
                 if (
                     (square/10 == 3 || square/10 == 8)
                     && b->piece[square + 20 * color] == 7
                 ) {
-                    add_move_to_ml(ml, nb_moves, square, square + 20*color);
-                    nb_moves++;
+                    add_move_to_ml(ml, n, square, square + 20*color);
+                    n++;
                 }
             }
             if (b->color[square + 10 * color + 1] == color * -1) {
-                add_move_to_ml(ml, nb_moves, square, square + 10*color + 1);
-                nb_moves++;
+                add_move_to_ml(ml, n, square, square + 10*color + 1);
+                n++;
             }
             if (b->color[square + 10 * color - 1] == color * -1) {
-                add_move_to_ml(ml, nb_moves, square, square + 10*color - 1);
-                nb_moves++;
+                add_move_to_ml(ml, n, square, square + 10*color - 1);
+                n++;
             }
-            return ml;
+            return n;
         case 2: // KNIGHT
-            add_point_moves(b, ml, 0, square);
-            return ml;
+            n = add_point_moves(b, ml, n, 0, square);
+            return n;
         case 3: // BISHOP
-            add_ray_moves(b, ml, 1, square);
-            return ml;
+            n= add_ray_moves(b, ml, n, 1, square);
+            return n;
         case 4: // ROOK
-            add_ray_moves(b, ml, 2, square);
-            return ml;
+            n = add_ray_moves(b, ml, n, 2, square);
+            return n;
         case 5: // QUEEN
-            add_ray_moves(b, ml, 3, square);
-            return ml;
+            n = add_ray_moves(b, ml, n, 3, square);
+            return n;
         case 6: // KING
-            add_point_moves(b, ml, 4, square);
-            return ml;
+            n = add_point_moves(b, ml, n, 4, square);
+            return n;
         default:
-            return NULL;
+            return n;
     }
 }
 
