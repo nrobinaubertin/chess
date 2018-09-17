@@ -171,8 +171,6 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
     if (color == 1) {
         if (
             b->castling_rights[1]
-            && b->piece[21] == 4
-            && b->color[21] == 1
             && b->color[22] == 0
             && b->color[23] == 0
             && b->color[24] == 0
@@ -185,8 +183,6 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
         }
         if (
             b->castling_rights[0]
-            && b->piece[28] == 4
-            && b->color[28] == 1
             && b->color[27] == 0
             && b->color[26] == 0
             && !is_square_checked(b, 1, 25)
@@ -199,8 +195,6 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
     } else {
         if (
             b->castling_rights[3]
-            && b->piece[91] == 4
-            && b->color[91] == -1
             && b->color[92] == 0
             && b->color[93] == 0
             && b->color[94] == 0
@@ -213,8 +207,6 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
         }
         if (
             b->castling_rights[2]
-            && b->piece[98] == 4
-            && b->color[98] == -1
             && b->color[97] == 0
             && b->color[96] == 0
             && !is_square_checked(b, 1, 95)
@@ -231,22 +223,26 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
 // this function places a virtual king of the chosen color of the chose square
 // and tests if he is in check
 bool is_square_checked(board b, int color, int square) {
-    // create virtual board
-    // we can maybe be faster by manipulating the given board...?
-    board vb = copy_board(b);
-    // remove the king
+    // remove the king (it can block rays)
     if (color == 1) {
-        vb->piece[vb->king_square[0]] = 7;
-        vb->color[vb->king_square[0]] = 0;
+        b->piece[b->king_square[0]] = 7;
+        b->color[b->king_square[0]] = 0;
     } else {
-        vb->piece[vb->king_square[1]] = 7;
-        vb->color[vb->king_square[1]] = 0;
+        b->piece[b->king_square[1]] = 7;
+        b->color[b->king_square[1]] = 0;
     }
     // 1. check if a knight threatens the square
     for(int i = 0; i < 4; i++) {
         for(int inv = -1; inv <= 1; inv += 2) {
             if (b->piece[inv*ray[0][i]] == 2 && b->color[inv*ray[0][i]] == color*-1) {
-                destroy_board(vb);
+                // re-add the king
+                if (color == 1) {
+                    b->piece[b->king_square[0]] = 6;
+                    b->color[b->king_square[0]] = 1;
+                } else {
+                    b->piece[b->king_square[1]] = 6;
+                    b->color[b->king_square[1]] = -1;
+                }
                 return true;
             }
         }
@@ -265,7 +261,14 @@ bool is_square_checked(board b, int color, int square) {
                     || b->piece[square + inv*ray[2][i] * k] == 5
                 )
             ) {
-                destroy_board(vb);
+                // re-add the king
+                if (color == 1) {
+                    b->piece[b->king_square[0]] = 6;
+                    b->color[b->king_square[0]] = 1;
+                } else {
+                    b->piece[b->king_square[1]] = 6;
+                    b->color[b->king_square[1]] = -1;
+                }
                 return true;
             }
         }
@@ -280,7 +283,14 @@ bool is_square_checked(board b, int color, int square) {
                 && b->color[square + inv*ray[2][i]] == color*-1
                 && b->piece[square + inv*ray[2][i]] == 1
             ) {
-                destroy_board(vb);
+                // re-add the king
+                if (color == 1) {
+                    b->piece[b->king_square[0]] = 6;
+                    b->color[b->king_square[0]] = 1;
+                } else {
+                    b->piece[b->king_square[1]] = 6;
+                    b->color[b->king_square[1]] = -1;
+                }
                 return true;
             }
             while (b->piece[square + inv*ray[2][i] * k] == 7) {
@@ -293,12 +303,26 @@ bool is_square_checked(board b, int color, int square) {
                     || b->piece[square + inv*ray[2][i] * k] == 5
                 )
             ) {
-                destroy_board(vb);
+                // re-add the king
+                if (color == 1) {
+                    b->piece[b->king_square[0]] = 6;
+                    b->color[b->king_square[0]] = 1;
+                } else {
+                    b->piece[b->king_square[1]] = 6;
+                    b->color[b->king_square[1]] = -1;
+                }
                 return true;
             }
         }
     }
-    destroy_board(vb);
+    // re-add the king
+    if (color == 1) {
+        b->piece[b->king_square[0]] = 6;
+        b->color[b->king_square[0]] = 1;
+    } else {
+        b->piece[b->king_square[1]] = 6;
+        b->color[b->king_square[1]] = -1;
+    }
     return false;
 }
 
