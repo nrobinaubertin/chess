@@ -44,7 +44,7 @@ void destroy_move_list(move* ml) {
 
 move* gen_all_moves(board b, int color) {
     move* ml = create_move_list();
-    int n = 0;
+    int n = add_castle_moves(b, ml, 0, color);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             int k = 21 + j + 10*i;
@@ -53,7 +53,6 @@ move* gen_all_moves(board b, int color) {
             }
         }
     }
-    n = add_castle_moves(b, ml, n, color);
     return ml;
 }
 
@@ -83,15 +82,14 @@ void add_move_to_ml(move* ml, int n, int start, int end) {
     ml[n] = m;
 }
 
-int add_ray_moves(board b, move* ml, int n, int piece_type, int square) {
+int add_ray_moves(board b, move* ml, int n, int piece_type, int square, int color) {
     int i = 0;
-    int color = b->color[square];
     while(ray[piece_type][i] != 0) {
         for(int inv = -1; inv <= 1; inv += 2) {
             int k = 1;
-            while ( // stops when out of borders or blocked by same color pieces
-                b->piece[square + inv*ray[piece_type][i] * k] != 0
-                && b->color[square + inv*ray[piece_type][i] * k] != color
+            while (
+                b->piece[square + inv*ray[piece_type][i] * k] == 7
+                || b->color[square + inv*ray[piece_type][i] * k] == color * -1
             ) {
                 add_move_to_ml(ml, n, square, square + inv*ray[piece_type][i] * k);
                 n++;
@@ -107,14 +105,13 @@ int add_ray_moves(board b, move* ml, int n, int piece_type, int square) {
     return n;
 }
 
-int add_point_moves(board b, move* ml, int n, int piece_type, int square) {
+int add_point_moves(board b, move* ml, int n, int piece_type, int square, int color) {
     int i = 0;
-    int color = b->color[square];
     while(ray[piece_type][i] != 0) {
         for(int inv = -1; inv <= 1; inv += 2) {
             if (
-                b->color[square + inv*ray[piece_type][i]] == color * -1
-                || b->piece[square + inv*ray[piece_type][i]] == 7
+                b->piece[square + inv*ray[piece_type][i]] == 7
+                || b->color[square + inv*ray[piece_type][i]] == color * -1
             ) {
                 add_move_to_ml(ml, n, square, square + inv*ray[piece_type][i]);
                 n++;
@@ -151,19 +148,19 @@ int add_move_list(board b, int square, move* ml, int n) {
             }
             return n;
         case 2: // KNIGHT
-            n = add_point_moves(b, ml, n, 0, square);
+            n = add_point_moves(b, ml, n, 0, square, color);
             return n;
         case 3: // BISHOP
-            n= add_ray_moves(b, ml, n, 1, square);
+            n= add_ray_moves(b, ml, n, 1, square, color);
             return n;
         case 4: // ROOK
-            n = add_ray_moves(b, ml, n, 2, square);
+            n = add_ray_moves(b, ml, n, 2, square, color);
             return n;
         case 5: // QUEEN
-            n = add_ray_moves(b, ml, n, 3, square);
+            n = add_ray_moves(b, ml, n, 3, square, color);
             return n;
         case 6: // KING
-            n = add_point_moves(b, ml, n, 4, square);
+            n = add_point_moves(b, ml, n, 4, square, color);
             return n;
         default:
             return n;
