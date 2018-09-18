@@ -6,12 +6,15 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
+#include <search.h>
 
 #include "util.h"
 #include "board.h"
 #include "print.h"
 #include "move.h"
 #include "evaluate.h"
+
+#define HASHTABLE_SIZE 1000000
 
 int is_game_over(board b) {
     bool white = false;
@@ -64,9 +67,9 @@ move best_move(board b, int depth) {
         board bb = copy_board(b);
         apply_move(ml[i], bb);
         int score = -negamax(bb, depth - 1);
-        printf("\n");
-        print_move(ml[i]);
-        printf("score: %d\n", score);
+        // printf("\n");
+        // print_move(ml[i]);
+        // printf("score: %d\n", score);
         if (score > max) {
             max = score;
             best_move = ml[i];
@@ -81,39 +84,69 @@ move best_move(board b, int depth) {
 
 int main(int argc, char* argv[]) {
 
-    //srand((unsigned) time(NULL));
-    board b = create_board();
-    assert(b);
-    b = init_board(b);
-    print_board(b);
+    srand((unsigned) time(NULL));
+    // for(int i = 0; i < 2*8*64; i++) {
+    //     printf("%d\n", rand());
+    // }
+    hcreate(HASHTABLE_SIZE);
+    ENTRY e, *ep;
+    int n = 0;
+    for(int i = 0; i < 1000; i++) {
+        board b = create_board();
+        assert(b);
+        b = init_board(b);
+        // print_board(b);
 
-    move m = best_move(b, atoi(argv[1]));
-    printf("\n");
-    print_move(m);
-    printf("\n");
-    apply_move(m, b);
-    print_board(b);
-    free(m);
-    destroy_board(b);
-    /*
-    int w = 0;
-    while (!(w = is_game_over(b))) {
-        move m = best_move(b, atoi(argv[1]));
-        printf("\n");
-        print_move(m);
-        printf("\n");
-        apply_move(m, b);
-        print_board(b);
-        free(m);
+        // move m = best_move(b, atoi(argv[1]));
+        // printf("\n");
+        // print_move(m);
+        // printf("\n");
+        // apply_move(m, b);
+        // print_board(b);
+        // free(m);
+        // destroy_board(b);
+        int w = 0;
+        while (!(w = is_game_over(b))) {
+            //move m = best_move(b, atoi(argv[1]));
+            move m = rand_move(b);
+            //printf("\n");
+            //print_move(m);
+            //printf("\n");
+            apply_move(m, b);
+            //print_board(b);
+            unsigned long hash = hash_board(b);
+            char cc[10];
+            sprintf(cc, "%ld", hash);
+            e.key = cc;
+            ep = hsearch(e, FIND);
+            if (ep != NULL) {
+                if (boardcmp(b, ep->data)) {
+                    // printf("id hash: %x\n", hash);
+                } else {
+                    print_board(b);
+                    print_board(ep->data);
+                    // printf("HIT\n");
+                    printf("hash: %ld\n", hash);
+                    printf("n: %d\n", n);
+                    exit(0);
+                }
+            } else {
+                e.data = copy_board(b);
+                hsearch(e, ENTER);
+                n++;
+            }
+            //sleep(2);
+            if (m)
+                free(m);
+        }
+        destroy_board(b);
     }
-    destroy_board(b);
 
-    if (w == 1) {
-        printf("White wins !\n");
-    } else {
-        printf("Black wins !\n");
-    }
-    */
+    // if (w == 1) {
+    //     printf("White wins !\n");
+    // } else {
+    //     printf("Black wins !\n");
+    // }
 
     // char coord[3];
     // int k;
@@ -126,5 +159,6 @@ int main(int argc, char* argv[]) {
     //     printf("\n");
     // }
 
+    hdestroy();
     return EXIT_SUCCESS;
 }

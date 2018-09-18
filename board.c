@@ -1,16 +1,30 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 #include "board.h"
+#include "hash.h"
 
 board create_board() {
     board b = malloc(sizeof(struct board));
     assert(b);
-    b->color = malloc(sizeof(int) * 120);
+    b->color = calloc(120, sizeof(int));
     assert(b->color);
-    b->piece = malloc(sizeof(int) * 120);
+    b->piece = calloc(120, sizeof(int));
     assert(b->piece);
     return b;
+}
+
+bool boardcmp(board b1, board b2) {
+    if (
+        memcmp(b1->color, b2->color, sizeof(int) * 120) == 0
+        && memcmp(b1->piece, b2->piece, sizeof(int) * 120) == 0
+        && memcmp(b1->castling_rights, b2->castling_rights, sizeof(int) * 4) == 0
+        && b1->who == b2->who
+    ) {
+        return true;
+    }
+    return false;
 }
 
 board copy_board(board b) {
@@ -31,6 +45,32 @@ void destroy_board(board b) {
             free(b->piece);
         free(b);
     }
+}
+
+unsigned long hash_board(board b) {
+    unsigned long hash = 0;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            int k = 21 + j + 10*i;
+            switch (b->color[k]) {
+                case 1:
+                    hash ^= hash_table[64 * b->piece[k] + i + 8 * j];
+                    break;
+                case -1:
+                    hash ^= hash_table[512 + 64 * b->piece[k] + i + 8 * j];
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    for(int i = 0; i < 4; i++) {
+        if (b->castling_rights[i])
+            hash ^= bonus_hashes[i];
+    }
+    if (b->who == 1)
+        hash ^= bonus_hashes[4];
+    return hash;
 }
 
 board init_board(board b) {

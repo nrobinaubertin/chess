@@ -12,3 +12,5 @@ board init_board(board b);
 board create_board();
 void destroy_board(board b);
 board copy_board(board b);
+unsigned long hash_board(board b);
+bool boardcmp(board b1, board b2);
