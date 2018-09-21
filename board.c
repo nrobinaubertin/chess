@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "board.h"
-#include "hash.h"
+#include "zobrist.h"
 
 board create_board() {
     board b = malloc(sizeof(struct board));
@@ -47,17 +47,17 @@ void destroy_board(board b) {
     }
 }
 
-unsigned long hash_board(board b) {
-    unsigned long hash = 0;
+uint64_t hash_board(board b) {
+    uint64_t hash = 0;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             int k = 21 + j + 10*i;
             switch (b->color[k]) {
                 case 1:
-                    hash ^= hash_table[64 * b->piece[k] + i + 8 * j];
+                    hash ^= hashpool[10 + 120 * (b->piece[k] - 1) + k];
                     break;
                 case -1:
-                    hash ^= hash_table[512 + 64 * b->piece[k] + i + 8 * j];
+                    hash ^= hashpool[730 + 120 * (b->piece[k] - 1) + k];
                     break;
                 default:
                     break;
@@ -66,11 +66,19 @@ unsigned long hash_board(board b) {
     }
     for(int i = 0; i < 4; i++) {
         if (b->castling_rights[i])
-            hash ^= bonus_hashes[i];
+            hash ^= hashpool[i];
     }
     if (b->who == 1)
-        hash ^= bonus_hashes[4];
+        hash ^= hashpool[4];
     return hash;
+}
+
+uint64_t hash_piece(int color, int piece, int k) {
+    if (color == 1) {
+        return hashpool[10 + 120 * (piece - 1) + k];
+    } else {
+        return hashpool[730 + 120 * (piece - 1) + k];
+    }
 }
 
 board init_board(board b) {
@@ -109,5 +117,6 @@ board init_board(board b) {
     b->castling_rights[2] = true;
     b->castling_rights[3] = true;
     b->who = 1;
+    b->key = hash_board(b);
     return b;
 }

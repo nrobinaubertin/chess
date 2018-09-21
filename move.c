@@ -7,6 +7,7 @@
 
 #include "move.h"
 #include "print.h"
+#include "zobrist.h"
 
 // A move list a an array of 100 moves.
 // A move is a start (int) and an end (int)
@@ -342,6 +343,7 @@ void apply_move(move m, board b) {
                 b->piece[27] = 6;
                 b->color[26] = 1;
                 b->piece[26] = 4;
+                b->key ^= hash_piece(1, 6, 25)^hash_piece(1, 4, 28)^hash_piece(1, 6, 27)^hash_piece(1, 4, 26);
                 break;
             case 101:
                 b->color[25] = 0;
@@ -352,6 +354,7 @@ void apply_move(move m, board b) {
                 b->piece[23] = 6;
                 b->color[24] = 1;
                 b->piece[24] = 4;
+                b->key ^= hash_piece(1, 6, 25)^hash_piece(1, 4, 21)^hash_piece(1, 6, 23)^hash_piece(1, 4, 24);
                 break;
             case 102:
                 b->color[95] = 0;
@@ -362,6 +365,7 @@ void apply_move(move m, board b) {
                 b->piece[97] = 6;
                 b->color[96] = -1;
                 b->piece[96] = 4;
+                b->key ^= hash_piece(-1, 6, 95)^hash_piece(-1, 4, 98)^hash_piece(-1, 6, 97)^hash_piece(-1, 4, 96);
                 break;
             case 103:
                 b->color[95] = 0;
@@ -372,10 +376,12 @@ void apply_move(move m, board b) {
                 b->piece[93] = 6;
                 b->color[94] = -1;
                 b->piece[94] = 4;
+                b->key ^= hash_piece(-1, 6, 95)^hash_piece(-1, 4, 91)^hash_piece(-1, 6, 93)^hash_piece(-1, 4, 94);
                 break;
         }
         return;
     }
+    b->key ^= hash_piece(b->color[m->start], b->piece[m->start], m->start);
     b->color[m->end] = b->color[m->start];
     b->color[m->start] = 0;
     b->piece[m->end] = b->piece[m->start];
@@ -393,10 +399,14 @@ void apply_move(move m, board b) {
                 b->king_square[0] = m->end;
                 b->castling_rights[0] = false;
                 b->castling_rights[1] = false;
+                b->key ^= hashpool[0];
+                b->key ^= hashpool[1];
             } else {
                 b->king_square[1] = m->end;
                 b->castling_rights[2] = false;
                 b->castling_rights[3] = false;
+                b->key ^= hashpool[2];
+                b->key ^= hashpool[3];
             }
             break;
         case 4:
@@ -404,18 +414,24 @@ void apply_move(move m, board b) {
             if (b->color[m->end] == 1) {
                 if (m->start == 21) {
                     b->castling_rights[0] = false;
+                    b->key ^= hashpool[0];
                 }
                 if (m->start == 28) {
                     b->castling_rights[1] = false;
+                    b->key ^= hashpool[1];
                 }
             } else {
                 if (m->start == 91) {
                     b->castling_rights[2] = false;
+                    b->key ^= hashpool[2];
                 }
                 if (m->start == 98) {
                     b->castling_rights[3] = false;
+                    b->key ^= hashpool[3];
                 }
             }
             break;
     }
+    b->key ^= hash_piece(b->color[m->end], b->piece[m->end], m->end);
+    b->key ^= hashpool[4];
 }
