@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "zobrist.h"
 
-#define HASHTABLE_SIZE 100000
+#define HASHTABLE_SIZE 1000000
 
 uint64_t* hashpool;
 entry* hashtable;
@@ -29,12 +29,21 @@ void init_hashtable() {
     hashtable = calloc(HASHTABLE_SIZE, sizeof(entry));
 }
 
+entry create_entry(board b, int depth) {
+    entry e = malloc(sizeof(struct entry));
+    e->key = b->key;
+    e->score = b->score;
+    e->who = b->who;
+    e->depth = depth;
+    e->next = NULL;
+    return e;
+}
+
+
 void destroy_entry(entry e) {
     if (!e)
         return;
-    if (e->next)
-        destroy_entry(e->next);
-    free(e->b);
+    destroy_entry(e->next);
     free(e);
 }
 
@@ -42,34 +51,31 @@ void destroy_hashtable() {
     if (!hashtable)
         return;
     for (int i = 0; i < HASHTABLE_SIZE; i++) {
-        if (hashtable[i])
-            destroy_entry(hashtable[i]);
+        destroy_entry(hashtable[i]);
     }
     free(hashtable);
 }
 
-void add_hashtable(board b) {
-    entry ne = calloc(1, sizeof(struct entry));
-    ne->b = b;
-    entry e = hashtable[b->key % HASHTABLE_SIZE];
-    if (!e) {
-        hashtable[b->key % HASHTABLE_SIZE] = ne;
+void add_hashtable(entry e) {
+    entry ee = hashtable[e->key % HASHTABLE_SIZE];
+    if (!ee) {
+        hashtable[e->key % HASHTABLE_SIZE] = e;
         return;
     }
-    while (e->next)
-        e = e->next;
-    e->next = ne;
+    while (ee->next)
+        ee = ee->next;
+    ee->next = e;
 }
 
-board find_hashtable(uint64_t key) {
+entry find_hashtable(uint64_t key) {
     entry e = hashtable[key % HASHTABLE_SIZE];
     if (!e)
         return NULL;
-    if (e->b->key == key)
-        return e->b;
-    while (e->next && e->b->key != key)
+    if (e->key == key)
+        return e;
+    while (e->next && e->key != key)
         e = e->next;
-    if (e->b->key == key)
-        return e->b;
+    if (e->key == key)
+        return e;
     return NULL;
 }

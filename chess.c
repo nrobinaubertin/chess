@@ -2,11 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <assert.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
-// #include <search.h>
 #include <stdint.h>
 
 #include "util.h"
@@ -39,7 +37,10 @@ int is_game_over(board b) {
     return -1;
 }
 
-int negamax(board b, int depth) {
+int search(board b, int depth) {
+    entry e = find_hashtable(b->key);
+    if (e)
+        return e->score;
     if (depth == 0 || is_game_over(b))
         return evaluate(b);
     int max = -100000;
@@ -48,9 +49,10 @@ int negamax(board b, int depth) {
     while (ml[i] != NULL) {
         board bb = copy_board(b);
         apply_move(ml[i], bb);
-        int score = -negamax(bb, depth - 1);
-        if (score > max)
-            max = score;
+        bb->score = -search(bb, depth - 1);
+        if (bb->score > max)
+            max = bb->score;
+        add_hashtable(create_entry(bb, depth));
         destroy_board(bb);
         i++;
     }
@@ -66,7 +68,7 @@ move best_move(board b, int depth) {
     while (ml[i] != NULL) {
         board bb = copy_board(b);
         apply_move(ml[i], bb);
-        int score = -negamax(bb, depth - 1);
+        int score = -search(bb, depth - 1);
         // printf("\n");
         // print_move(ml[i]);
         // printf("score: %d\n", score);
@@ -83,93 +85,52 @@ move best_move(board b, int depth) {
 }
 
 int main(int argc, char* argv[]) {
+    srand((unsigned) time(NULL));
+    init_hashtable();
+    init_hashpool();
+    board b = create_board();
+    b = init_board(b);
+    print_board(b);
 
-    for (int seed = 0; seed < 1000; seed++) {
-        srand(seed);
-        // for(int i = 0; i < 2*8*64; i++) {
-        //     printf("%d\n", rand());
-        // }
-        init_hashtable();
-        init_hashpool();
-        int collisions = 0;
-        int n = 0;
-        srand((unsigned) time(NULL));
-        for(int i = 0; i < 1000; i++) {
-            board b = create_board();
-            assert(b);
-            b = init_board(b);
-            // print_board(b);
+    move m = best_move(b, atoi(argv[1]));
+    printf("\n");
+    print_move(m);
+    printf("\n");
+    apply_move(m, b);
+    print_board(b);
+    free(m);
+    destroy_board(b);
+    // while (!(w = is_game_over(b))) {
+    //     //move m = best_move(b, atoi(argv[1]));
+    //     move m = rand_move(b);
+    //     //printf("\n");
+    //     //print_move(m);
+    //     //printf("\n");
+    //     apply_move(m, b);
+    //     //print_board(b);
+    //     //sleep(2);
+    //     if (m)
+    //         free(m);
+    // }
 
-            // move m = best_move(b, atoi(argv[1]));
-            // printf("\n");
-            // print_move(m);
-            // printf("\n");
-            // apply_move(m, b);
-            // print_board(b);
-            // free(m);
-            // destroy_board(b);
-            int w = 0;
-            while (!(w = is_game_over(b))) {
-                //move m = best_move(b, atoi(argv[1]));
-                move m = rand_move(b);
-                //printf("\n");
-                //print_move(m);
-                //printf("\n");
-                apply_move(m, b);
-                //print_board(b);
-                // uint64_t hash = hash_board(b);
-                // char cc[10];
-                // sprintf(cc, "%lu", b->key);
-                // e.key = cc;
-                // ep = hsearch(e, FIND);
-                board bb = find_hashtable(b->key);
-                if (bb != NULL) {
-                    if (!boardcmp(b, bb)) {
-                        // print_board(b);
-                        // print_board(bb);
-                        // printf("hash: %ld\n", b->key);
-                        // printf("hash: %ld\n", bb->key);
-                        // printf("n: %d\n", n);
-                        collisions++;
-                    }
-                } else {
-                    // e.data = copy_board(b);
-                    // hsearch(e, ENTER);
-                    add_hashtable(copy_board(b));
-                    n++;
-                }
-                //sleep(2);
-                if (m)
-                    free(m);
-            }
-            destroy_board(b);
-        }
+    // if (w == 1) {
+    //     printf("White wins !\n");
+    // } else {
+    //     printf("Black wins !\n");
+    // }
 
-        if (collisions != 0) {
-            printf("seed(%d) %d\n", seed, n/collisions);
-        } else {
-            printf("seed(%d) inf\n", seed);
-        }
+    // char coord[3];
+    // int k;
+    // while (true) {
+    //     printf("square: ");
+    //     scanf(" %c%c", &coord[0], &coord[1]);
+    //     k = coord2int(coord);
+    //     printf("%d ", k);
+    //     print_square(b->color[k], b->piece[k]);
+    //     printf("\n");
+    // }
 
-        // if (w == 1) {
-        //     printf("White wins !\n");
-        // } else {
-        //     printf("Black wins !\n");
-        // }
-
-        // char coord[3];
-        // int k;
-        // while (true) {
-        //     printf("square: ");
-        //     scanf(" %c%c", &coord[0], &coord[1]);
-        //     k = coord2int(coord);
-        //     printf("%d ", k);
-        //     print_square(b->color[k], b->piece[k]);
-        //     printf("\n");
-        // }
-
-        free(hashpool);
-        destroy_hashtable();
-    }
+    free(hashpool);
+    destroy_hashtable();
     return EXIT_SUCCESS;
 }

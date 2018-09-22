@@ -8,6 +8,7 @@ typedef struct board {
     int king_square[2];
     bool castling_rights[4];
     int who; // who's turn it is (color);
+    int score;
     uint64_t key; // hash
 } *board;
 board init_board(board b);

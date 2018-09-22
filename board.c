@@ -1,17 +1,14 @@
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <stdbool.h>
 #include "board.h"
 #include "zobrist.h"
+#include "evaluate.h"
 
 board create_board() {
     board b = malloc(sizeof(struct board));
-    assert(b);
     b->color = calloc(120, sizeof(int));
-    assert(b->color);
     b->piece = calloc(120, sizeof(int));
-    assert(b->piece);
     return b;
 }
 
@@ -34,6 +31,8 @@ board copy_board(board b) {
     memcpy(bb->king_square, b->king_square, sizeof(int) * 2);
     memcpy(bb->castling_rights, b->castling_rights, sizeof(int) * 4);
     bb->who = b->who;
+    bb->score = b->score;
+    bb->key = b->key;
     return bb;
 }
 
@@ -118,5 +117,6 @@ board init_board(board b) {
     b->castling_rights[3] = true;
     b->who = 1;
     b->key = hash_board(b);
+    b->score = evaluate(b);
     return b;
 }
