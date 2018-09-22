@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "zobrist.h"
 
-#define HASHTABLE_SIZE 1000000
+#define HASHTABLE_SIZE 100000
 
 uint64_t* hashpool;
 entry* hashtable;
@@ -21,7 +21,6 @@ void init_hashpool() {
     hashpool = malloc(sizeof(uint64_t) * 1450);
     for (int32_t i = 0; i < 1450; i++) {
         hashpool[i] = get64rand();
-        // printf("%ld\n", hashpool[i]);
     }
 }
 
@@ -62,8 +61,9 @@ void add_hashtable(entry e) {
         hashtable[e->key % HASHTABLE_SIZE] = e;
         return;
     }
-    while (ee->next)
+    while (ee->next && ee->next->key != e->key)
         ee = ee->next;
+    destroy_entry(ee->next);
     ee->next = e;
 }
 
