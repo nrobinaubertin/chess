@@ -5,7 +5,6 @@
 typedef struct entry {
     uint64_t key;
     int score;
-    int who;
     int depth;
     struct entry* next;
 } *entry;

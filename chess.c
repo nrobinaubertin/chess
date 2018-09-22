@@ -70,7 +70,8 @@ int search(board b, int depth, int alpha, int beta) {
         bb->score = -search(bb, depth - 1, beta*-1, alpha*-1);
         value = max(value, bb->score);
         alpha = max(alpha, value);
-        add_hashtable(create_entry(bb, depth));
+        if (depth > 2)
+            add_hashtable(create_entry(bb, depth));
         destroy_board(bb);
         if (alpha >= beta)
             break;
@@ -137,6 +138,7 @@ int main(int argc, char* argv[]) {
     // free(m);
     // destroy_board(b);
     int w = 0;
+    int turn = 0;
     while (!(w = is_game_over(b))) {
         move m = best_move(b, atoi(argv[1]));
         printf("\n");
@@ -147,6 +149,9 @@ int main(int argc, char* argv[]) {
         // sleep(5);
         if (m)
             free(m);
+        turn++;
+        if (turn > 1)
+            exit(0);
     }
 
     if (w == 1) {

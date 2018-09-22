@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "zobrist.h"
 
-#define HASHTABLE_SIZE 10000000
+#define HASHTABLE_SIZE 1000000
 
 uint64_t* hashpool;
 entry* hashtable;
@@ -32,7 +32,6 @@ entry create_entry(board b, int depth) {
     entry e = malloc(sizeof(struct entry));
     e->key = b->key;
     e->score = b->score;
-    e->who = b->who;
     e->depth = depth;
     e->next = NULL;
     return e;
@@ -56,13 +55,25 @@ void destroy_hashtable() {
 }
 
 void add_hashtable(entry e) {
-    entry ee = hashtable[e->key % HASHTABLE_SIZE];
-    if (!ee) {
+    entry fe = hashtable[e->key % HASHTABLE_SIZE];
+    if (!fe) {
         hashtable[e->key % HASHTABLE_SIZE] = e;
         return;
     }
-    while (ee->next && ee->next->key != e->key)
+    int d = 0;
+    entry ee = fe;
+    while (ee->next && ee->next->key != e->key) {
         ee = ee->next;
+        d++;
+    }
+    // clean old entries
+    if (d > 10) {
+        printf("clean\n");
+        entry nf = fe->next->next->next;
+        fe->next->next->next = NULL;
+        destroy_entry(fe);
+        hashtable[e->key % HASHTABLE_SIZE] = nf;
+    }
     destroy_entry(ee->next);
     ee->next = e;
 }
