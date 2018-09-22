@@ -10,6 +10,7 @@ typedef struct board {
     int who; // who's turn it is (color);
     int score;
     uint64_t key; // hash
+    uint64_t* keys_history;
 } *board;
 board init_board(board b);
 board create_board();

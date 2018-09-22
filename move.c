@@ -328,6 +328,12 @@ bool is_square_checked(board b, int color, int square) {
 
 void apply_move(move m, board b) {
 
+    // add current key to the board keys_history
+    int i = 0;
+    while (b->keys_history[i] != 0)
+        i++;
+    b->keys_history[i] = b->key;
+
     // is it a castle move ?
     if (m->end >= 100) {
         switch (m->end) {

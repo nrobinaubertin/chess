@@ -9,6 +9,7 @@ board create_board() {
     board b = malloc(sizeof(struct board));
     b->color = calloc(120, sizeof(int));
     b->piece = calloc(120, sizeof(int));
+    b->keys_history = calloc(200, sizeof(uint64_t));
     return b;
 }
 
@@ -33,6 +34,7 @@ board copy_board(board b) {
     bb->who = b->who;
     bb->score = b->score;
     bb->key = b->key;
+    memcpy(bb->keys_history, b->keys_history, sizeof(uint64_t) * 200);
     return bb;
 }
 
@@ -42,6 +44,8 @@ void destroy_board(board b) {
             free(b->color);
         if (b->piece)
             free(b->piece);
+        if (b->keys_history)
+            free(b->keys_history);
         free(b);
     }
 }
