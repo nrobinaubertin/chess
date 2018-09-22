@@ -94,7 +94,7 @@ int add_ray_moves(board b, move* ml, int n, int piece_type, int square, int colo
                 add_move_to_ml(ml, n, square, square + inv*ray[piece_type][i] * k);
                 n++;
                 // if we eat an enemy piece, end the ray
-                if (b->piece[square + inv*ray[piece_type][i] * k] == color * -1) {
+                if (b->color[square + inv*ray[piece_type][i] * k] == color * -1) {
                     break;
                 }
                 k++;
