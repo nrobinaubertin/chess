@@ -80,6 +80,21 @@ int search(board b, int depth, int alpha, int beta) {
     return value;
 }
 
+int MTDF(board b, int f, int depth) {
+    int upper = 100000;
+    int lower = -100000;
+    while (lower < upper) {
+        int beta = max(f, lower + 1);
+        f = search(b, depth, beta - 1, beta);
+        if (f < beta) {
+            upper = f;
+        } else {
+            lower = f;
+        }
+    }
+    return f;
+}
+
 move best_move(board b, int depth) {
     move best_move = NULL;
     int max = -10000;
@@ -88,7 +103,8 @@ move best_move(board b, int depth) {
     while (ml[i] != NULL) {
         board bb = copy_board(b);
         apply_move(ml[i], bb);
-        int score = -search(bb, depth - 1, -100000, 100000);
+        int score = -MTDF(bb, 0, depth - 1);
+        // int score = -search(bb, depth - 1, -100000, 100000);
         // printf("\n");
         // print_move(ml[i]);
         // printf("score: %d\n", score);
