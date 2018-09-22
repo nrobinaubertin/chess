@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "zobrist.h"
 
-#define HASHTABLE_SIZE 100000
+#define HASHTABLE_SIZE 10000000
 
 uint64_t* hashpool;
 entry* hashtable;

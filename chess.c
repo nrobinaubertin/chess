@@ -47,7 +47,7 @@ int is_game_over(board b) {
     return -1;
 }
 
-int search(board b, int depth) {
+int search(board b, int depth, int alpha, int beta) {
     entry e = find_hashtable(b->key);
     if (e && e->depth > depth)
         return e->score;
@@ -61,21 +61,23 @@ int search(board b, int depth) {
             return evaluate(b);
         }
     }
-    int max = -100000;
+    int value = -100000;
     move* ml = gen_all_moves(b);
     int i = 0;
     while (ml[i] != NULL) {
         board bb = copy_board(b);
         apply_move(ml[i], bb);
-        bb->score = -search(bb, depth - 1);
-        if (bb->score > max)
-            max = bb->score;
+        bb->score = -search(bb, depth - 1, beta*-1, alpha*-1);
+        value = max(value, bb->score);
+        alpha = max(alpha, value);
         add_hashtable(create_entry(bb, depth));
         destroy_board(bb);
+        if (alpha >= beta)
+            break;
         i++;
     }
     destroy_move_list(ml);
-    return max;
+    return value;
 }
 
 move best_move(board b, int depth) {
@@ -86,7 +88,7 @@ move best_move(board b, int depth) {
     while (ml[i] != NULL) {
         board bb = copy_board(b);
         apply_move(ml[i], bb);
-        int score = -search(bb, depth - 1);
+        int score = -search(bb, depth - 1, -100000, 100000);
         // printf("\n");
         // print_move(ml[i]);
         // printf("score: %d\n", score);
