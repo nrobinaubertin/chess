@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <assert.h>
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
@@ -22,7 +21,6 @@ static const int ray[5][5] = {
 
 move* create_move_list() {
     move* ml = calloc(100, sizeof(struct move) * 100);
-    assert(ml);
     return ml;
 }
 
@@ -72,7 +70,6 @@ move rand_move(board b) {
     }
     n = add_castle_moves(b, ml, n, color);
     move m = malloc(sizeof(struct move));
-    assert(m);
     memcpy(m, ml[rand()%n], sizeof(struct move));
     destroy_move_list(ml);
     return m;
@@ -330,7 +327,7 @@ bool is_square_checked(board b, int color, int square) {
 }
 
 void apply_move(move m, board b) {
-    b->who *= -1;
+
     // is it a castle move ?
     if (m->end >= 100) {
         switch (m->end) {
@@ -381,7 +378,12 @@ void apply_move(move m, board b) {
         }
         return;
     }
+    // remove moving piece from the key
     b->key ^= hash_piece(b->color[m->start], b->piece[m->start], m->start);
+    // remove the eventual taken piece from the key
+    if (b->color[m->end] != 0) {
+        b->key ^= hash_piece(b->color[m->end], b->piece[m->end], m->end);
+    }
     b->color[m->end] = b->color[m->start];
     b->color[m->start] = 0;
     b->piece[m->end] = b->piece[m->start];
@@ -432,6 +434,9 @@ void apply_move(move m, board b) {
             }
             break;
     }
+    // add moving piece to the key
     b->key ^= hash_piece(b->color[m->end], b->piece[m->end], m->end);
+    // change turn and adjut key accordingly
     b->key ^= hashpool[4];
+    b->who *= -1;
 }
