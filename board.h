@@ -12,7 +12,7 @@ typedef struct board {
     uint64_t key; // hash
     uint64_t* keys_history;
 } *board;
-board init_board(board b);
+void init_board(board b);
 board create_board();
 void destroy_board(board b);
 board copy_board(board b);

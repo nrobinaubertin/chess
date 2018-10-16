@@ -1,6 +1,5 @@
-#include <stdlib.h>
-#include <assert.h>
 #include "evaluate.h"
+#include <stdlib.h>
 
 // Piece-Square Tables
 
@@ -89,7 +88,7 @@ int evaluate(board b) {
                 case 1:
                     // doubled or blocked pawns
                     if (b->piece[k + 10 * color] == 1) {
-                        score += b->color[k] * 50;
+                        score += b->color[k] * 40;
                     } else {
                         score += b->color[k] * 100;
                     }
@@ -133,7 +132,7 @@ int evaluate(board b) {
                     }
                     break;
                 case 6:
-                    score += b->color[k] * 20000;
+                    score += b->color[k] * 100000;
                     break;
                 default:
                     break;

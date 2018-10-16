@@ -1,9 +1,10 @@
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+
 #include "board.h"
-#include "zobrist.h"
 #include "evaluate.h"
+#include "zobrist.h"
 
 board create_board() {
     board b = malloc(sizeof(struct board));
@@ -84,7 +85,7 @@ uint64_t hash_piece(int color, int piece, int k) {
     }
 }
 
-board init_board(board b) {
+void init_board(board b) {
     memcpy(b->color, (int[]){
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -122,5 +123,4 @@ board init_board(board b) {
     b->who = 1;
     b->key = hash_board(b);
     b->score = evaluate(b);
-    return b;
 }

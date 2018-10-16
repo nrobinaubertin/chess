@@ -1,8 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "move.h"
 #include "print.h"
@@ -220,6 +220,12 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
     return nb_moves;
 }
 
+bool is_king_checked(board b, int color) {
+    if (color == 1)
+        return is_square_checked(b, color, b->king_square[0]);
+    return is_square_checked(b, color, b->king_square[1]);
+}
+
 // this function places a virtual king of the chosen color of the chose square
 // and tests if he is in check
 bool is_square_checked(board b, int color, int square) {
@@ -326,6 +332,29 @@ bool is_square_checked(board b, int color, int square) {
     return false;
 }
 
+void atomic_move(board b, int start, int end) {
+    // remove moving piece from the key
+    b->key ^= hash_piece(b->color[start], b->piece[start], start);
+    // remove the eventual taken piece from the key
+    if (b->color[end] != 0) {
+        b->key ^= hash_piece(b->color[end], b->piece[end], end);
+    }
+    b->color[end] = b->color[start];
+    b->piece[end] = b->piece[start];
+    b->color[start] = 0;
+    b->piece[start] = 7;
+    // pawn promotion to queen
+    if (b->piece[end] == 1 && (end/10 == 2 || end/10 == 9))
+        b->piece[end] = 5;
+    // add moving piece to the key
+    b->key ^= hash_piece(b->color[end], b->piece[end], end);
+}
+
+void change_castling_rights(board b, int castle, bool value) {
+    b->castling_rights[castle] = value;
+    b->key ^= hashpool[castle];
+}
+
 void apply_move(move m, board b) {
 
     // add current key to the board keys_history
@@ -335,114 +364,60 @@ void apply_move(move m, board b) {
     b->keys_history[i] = b->key;
 
     // is it a castle move ?
-    if (m->end >= 100) {
-        switch (m->end) {
-            case 100:
-                b->color[25] = 0;
-                b->piece[25] = 7;
-                b->color[28] = 0;
-                b->piece[28] = 7;
-                b->color[27] = 1;
-                b->piece[27] = 6;
-                b->color[26] = 1;
-                b->piece[26] = 4;
-                b->key ^= hash_piece(1, 6, 25)^hash_piece(1, 4, 28)^hash_piece(1, 6, 27)^hash_piece(1, 4, 26);
-                break;
-            case 101:
-                b->color[25] = 0;
-                b->piece[25] = 7;
-                b->color[21] = 0;
-                b->piece[21] = 7;
-                b->color[23] = 1;
-                b->piece[23] = 6;
-                b->color[24] = 1;
-                b->piece[24] = 4;
-                b->key ^= hash_piece(1, 6, 25)^hash_piece(1, 4, 21)^hash_piece(1, 6, 23)^hash_piece(1, 4, 24);
-                break;
-            case 102:
-                b->color[95] = 0;
-                b->piece[95] = 7;
-                b->color[98] = 0;
-                b->piece[98] = 7;
-                b->color[97] = -1;
-                b->piece[97] = 6;
-                b->color[96] = -1;
-                b->piece[96] = 4;
-                b->key ^= hash_piece(-1, 6, 95)^hash_piece(-1, 4, 98)^hash_piece(-1, 6, 97)^hash_piece(-1, 4, 96);
-                break;
-            case 103:
-                b->color[95] = 0;
-                b->piece[95] = 7;
-                b->color[91] = 0;
-                b->piece[91] = 7;
-                b->color[93] = -1;
-                b->piece[93] = 6;
-                b->color[94] = -1;
-                b->piece[94] = 4;
-                b->key ^= hash_piece(-1, 6, 95)^hash_piece(-1, 4, 91)^hash_piece(-1, 6, 93)^hash_piece(-1, 4, 94);
-                break;
-        }
-        return;
+    switch (m->end) {
+        default:
+            break;
+        case 100:
+            atomic_move(b, 25, 27);
+            atomic_move(b, 28, 26);
+            return;
+        case 101:
+            atomic_move(b, 25, 23);
+            atomic_move(b, 21, 24);
+            return;
+        case 102:
+            atomic_move(b, 95, 97);
+            atomic_move(b, 98, 96);
+            return;
+        case 103:
+            atomic_move(b, 95, 93);
+            atomic_move(b, 91, 94);
+            return;
     }
-    // remove moving piece from the key
-    b->key ^= hash_piece(b->color[m->start], b->piece[m->start], m->start);
-    // remove the eventual taken piece from the key
-    if (b->color[m->end] != 0) {
-        b->key ^= hash_piece(b->color[m->end], b->piece[m->end], m->end);
-    }
-    b->color[m->end] = b->color[m->start];
-    b->color[m->start] = 0;
-    b->piece[m->end] = b->piece[m->start];
-    b->piece[m->start] = 7;
+
+    atomic_move(b, m->start, m->end);
+
     // special cases
     switch (b->piece[m->end]) {
-        case 1:
-            // pawn promotion to queen
-            if ((m->end/10 == 2 || m->end/10 == 9))
-                b->piece[m->end] = 5;
-            break;
         case 6:
             // king move
             if (b->color[m->end] == 1) {
                 b->king_square[0] = m->end;
-                b->castling_rights[0] = false;
-                b->castling_rights[1] = false;
-                b->key ^= hashpool[0];
-                b->key ^= hashpool[1];
+                change_castling_rights(b, 0, false);
+                change_castling_rights(b, 1, false);
             } else {
                 b->king_square[1] = m->end;
-                b->castling_rights[2] = false;
-                b->castling_rights[3] = false;
-                b->key ^= hashpool[2];
-                b->key ^= hashpool[3];
+                change_castling_rights(b, 2, false);
+                change_castling_rights(b, 3, false);
             }
             break;
         case 4:
             // rook move
             if (b->color[m->end] == 1) {
-                if (m->start == 21) {
-                    b->castling_rights[0] = false;
-                    b->key ^= hashpool[0];
-                }
-                if (m->start == 28) {
-                    b->castling_rights[1] = false;
-                    b->key ^= hashpool[1];
-                }
+                if (m->start == 21)
+                    change_castling_rights(b, 0, false);
+                if (m->start == 28)
+                    change_castling_rights(b, 1, false);
             } else {
-                if (m->start == 91) {
-                    b->castling_rights[2] = false;
-                    b->key ^= hashpool[2];
-                }
-                if (m->start == 98) {
-                    b->castling_rights[3] = false;
-                    b->key ^= hashpool[3];
-                }
+                if (m->start == 91)
+                    change_castling_rights(b, 2, false);
+                if (m->start == 98)
+                    change_castling_rights(b, 3, false);
             }
             break;
     }
-    // add moving piece to the key
-    b->key ^= hash_piece(b->color[m->end], b->piece[m->end], m->end);
-    // change turn and adjut key accordingly
+
+    // change turn and adjust key accordingly
     b->key ^= hashpool[4];
     b->who *= -1;
 }
