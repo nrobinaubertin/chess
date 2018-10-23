@@ -14,17 +14,19 @@
 #include "util.h"
 #include "zobrist.h"
 
-int is_game_over(board b) {
+int is_game_over(board b, bool check_draws) {
     // check for draw
-    int n = 0;
-    int it = 0;
-    while (b->keys_history[it] != 0) {
-        it++;
-        if (b->key == b->keys_history[it])
-            n++;
+    if (check_draws) {
+        int n = 0;
+        int it = 0;
+        while (b->keys_history[it] != 0) {
+            it++;
+            if (b->key == b->keys_history[it])
+                n++;
+        }
+        if (n > 2)
+            return 100;
     }
-    if (n > 2)
-        return 100;
     bool white = false;
     bool black = false;
     for (int i = 0; i < 8; i++) {
@@ -53,7 +55,7 @@ int search(board b, int depth, int alpha, int beta) {
         return e->score;
     if (depth == 0)
         return evaluate(b);
-    int state = is_game_over(b);
+    int state = is_game_over(b, true);
     if (state) {
         if (state == 100)
             return 0;
@@ -120,6 +122,28 @@ move best_move(board b, int depth, bool display) {
     return best_move;
 }
 
+int checks = 0;
+
+int perft(board b, int depth) {
+    if (depth == 0) {
+        if (is_king_checked(b, b->who))
+            checks++;
+        return 1;
+    }
+    int nodes = 0;
+    move* ml = gen_all_moves(b);
+    int i = 0;
+    while (ml[i]) {
+        board bb = copy_board(b);
+        apply_move(ml[i], bb);
+        if (!is_king_checked(bb, bb->who*-1))
+            nodes += perft(bb, depth - 1);
+        destroy_board(bb);
+        i++;
+    }
+    return nodes;
+}
+
 void play_alone(int depth) {
     srand((unsigned) time(NULL));
     init_hashtable();
@@ -130,7 +154,7 @@ void play_alone(int depth) {
 
     int w = 0;
     int turn = 0;
-    while (!(w = is_game_over(b))) {
+    while (!(w = is_game_over(b, true))) {
         move m = best_move(b, depth, false);
         printf("\n");
         print_move(m);
@@ -172,31 +196,19 @@ void find_best_starting_move(int depth) {
     destroy_board(b);
 }
 
-int perft(board b, int depth) {
-    if (depth == 0)
-        return 1;
-    int nodes = 0;
-    move* ml = gen_all_moves(b);
-    int i = 0;
-    while (ml[i]) {
-        board bb = copy_board(b);
-        apply_move(ml[i], bb);
-        if (!is_king_checked(bb, 1) && !is_king_checked(bb, -1))
-            nodes += perft(bb, depth - 1);
-        destroy_board(bb);
-        i++;
-    }
-    return nodes;
-}
-
-int main(int argc, char* argv[]) {
-    // find_best_starting_move(atoi(argv[1]));
+void execute_perft(int depth) {
     srand((unsigned) time(NULL));
     init_hashtable();
     init_hashpool();
     board b = create_board();
     init_board(b);
-    printf("nodes: %d\n", perft(b, atoi(argv[1])));
+    printf("nodes: %d\n", perft(b, depth));
+    printf("checks: %d\n", checks);
     destroy_board(b);
+}
+
+int main(int argc, char* argv[]) {
+    // find_best_starting_move(atoi(argv[1]));
+    execute_perft(atoi(argv[1]));
     return EXIT_SUCCESS;
 }

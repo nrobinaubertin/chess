@@ -8,15 +8,15 @@
 #include "print.h"
 #include "zobrist.h"
 
-// A move list a an array of 100 moves.
+// A move list a an array of 100 moves max.
 // A move is a start (int) and an end (int)
 
 static const int ray[5][5] = {
-    {21, 19, 12, 8},
-    {11, 9},
-    {10, 1},
-    {11, 10, 9, 1},
-    {11, 10, 9, 1}
+    {21, 19, 12, 8}, // knight
+    {11, 9}, // bishop
+    {10, 1}, // rook
+    {11, 10, 9, 1}, // queen
+    {11, 10, 9, 1} // king
 };
 
 move* create_move_list() {
@@ -49,7 +49,7 @@ move* gen_all_moves(board b) {
         for (int j = 0; j < 8; j++) {
             int k = 21 + j + 10*i;
             if (b->color[k] == color) {
-                n = add_move_list(b, k, ml, n);
+                n = add_move_list(b, k, ml, n, b->piece[k], b->color[k]);
             }
         }
     }
@@ -64,7 +64,7 @@ move rand_move(board b) {
         for (int j = 0; j < 8; j++) {
             int k = 21 + j + 10*i;
             if (b->color[k] == color) {
-                n = add_move_list(b, k, ml, n);
+                n = add_move_list(b, k, ml, n, b->piece[k], b->color[k]);
             }
         }
     }
@@ -122,9 +122,7 @@ int add_point_moves(board b, move* ml, int n, int piece_type, int square, int co
     return n;
 }
 
-int add_move_list(board b, int square, move* ml, int n) {
-    int piece = b->piece[square];
-    int color = b->color[square];
+int add_move_list(board b, int square, move* ml, int n, int piece, int color) {
     switch (piece) {
         case 1: // PAWN
             if (b->piece[square + 10 * color] == 7) {
@@ -174,9 +172,8 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
             && b->color[22] == 0
             && b->color[23] == 0
             && b->color[24] == 0
-            && !is_square_checked(b, 1, 25)
+            && !is_king_checked(b, color)
             && !is_square_checked(b, 1, 24)
-            && !is_square_checked(b, 1, 23)
         ) {
             add_move_to_ml(ml, nb_moves, b->king_square[0], 101);
             nb_moves++;
@@ -185,9 +182,8 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
             b->castling_rights[0]
             && b->color[27] == 0
             && b->color[26] == 0
-            && !is_square_checked(b, 1, 25)
+            && !is_king_checked(b, color)
             && !is_square_checked(b, 1, 26)
-            && !is_square_checked(b, 1, 27)
         ) {
             add_move_to_ml(ml, nb_moves, b->king_square[0], 100);
             nb_moves++;
@@ -198,9 +194,8 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
             && b->color[92] == 0
             && b->color[93] == 0
             && b->color[94] == 0
-            && !is_square_checked(b, -1, 95)
+            && !is_king_checked(b, color)
             && !is_square_checked(b, -1, 94)
-            && !is_square_checked(b, -1, 93)
         ) {
             add_move_to_ml(ml, nb_moves, b->king_square[0], 103);
             nb_moves++;
@@ -209,9 +204,8 @@ int add_castle_moves(board b, move* ml, int nb_moves, int color) {
             b->castling_rights[2]
             && b->color[97] == 0
             && b->color[96] == 0
-            && !is_square_checked(b, 1, 95)
-            && !is_square_checked(b, 1, 96)
-            && !is_square_checked(b, 1, 97)
+            && !is_king_checked(b, color)
+            && !is_square_checked(b, -1, 96)
         ) {
             add_move_to_ml(ml, nb_moves, b->king_square[0], 102);
             nb_moves++;
@@ -229,106 +223,73 @@ bool is_king_checked(board b, int color) {
 // this function places a virtual king of the chosen color of the chose square
 // and tests if he is in check
 bool is_square_checked(board b, int color, int square) {
-    // remove the king (it can block rays)
+    move* ml = NULL;
+    int n;
+
+    // check for pawn attacks
     if (color == 1) {
-        b->piece[b->king_square[0]] = 7;
-        b->color[b->king_square[0]] = 0;
+        if (
+            b->piece[b->king_square[0] + 11] == 1
+            && b->color[b->king_square[0] + 11] == -1
+        )
+            return true;
+        if (
+            b->piece[b->king_square[0] + 9] == 1
+            && b->color[b->king_square[0] + 9] == -1
+        )
+            return true;
     } else {
-        b->piece[b->king_square[1]] = 7;
-        b->color[b->king_square[1]] = 0;
+        if (
+            b->piece[b->king_square[1] - 11] == 1
+            && b->color[b->king_square[1] - 11] == 1
+        )
+            return true;
+        if (
+            b->piece[b->king_square[1] - 9] == 1
+            && b->color[b->king_square[1] - 9] == 1
+        )
+            return true;
     }
-    // 1. check if a knight threatens the square
-    for(int i = 0; i < 4; i++) {
-        for(int inv = -1; inv <= 1; inv += 2) {
-            if (b->piece[inv*ray[0][i]] == 2 && b->color[inv*ray[0][i]] == color*-1) {
-                // re-add the king
-                if (color == 1) {
-                    b->piece[b->king_square[0]] = 6;
-                    b->color[b->king_square[0]] = 1;
-                } else {
-                    b->piece[b->king_square[1]] = 6;
-                    b->color[b->king_square[1]] = -1;
-                }
-                return true;
-            }
-        }
+
+    // check knight moves
+    ml = create_move_list();
+    n = 0;
+    n = add_move_list(b, square, ml, n, 2, color);
+    for (int i = 0; i < n; i++) {
+        if (
+            b->color[ml[i]->end] == color*-1
+            && b->piece[ml[i]->end] == 2
+        )
+            return true;
     }
-    // 2. ray-check in cardinal directions for an enemy piece
-    for(int i = 0; i < 2; i++) {
-        for(int inv = -1; inv <= 1; inv += 2) {
-            int k = 1;
-            while (b->piece[square + inv*ray[2][i] * k] == 7) {
-                k++;
-            }
-            if (
-                b->color[square + inv*ray[2][i] * k] == color*-1
-                && (
-                    b->piece[square + inv*ray[2][i] * k] == 4
-                    || b->piece[square + inv*ray[2][i] * k] == 5
-                )
-            ) {
-                // re-add the king
-                if (color == 1) {
-                    b->piece[b->king_square[0]] = 6;
-                    b->color[b->king_square[0]] = 1;
-                } else {
-                    b->piece[b->king_square[1]] = 6;
-                    b->color[b->king_square[1]] = -1;
-                }
-                return true;
-            }
-        }
+    destroy_move_list(ml);
+
+    // check bishop and diagonal queen moves
+    ml = create_move_list();
+    n = 0;
+    n = add_move_list(b, square, ml, n, 5, color);
+    for (int i = 0; i < n; i++) {
+        if (
+            b->color[ml[i]->end] == color*-1
+            && (b->piece[ml[i]->end] == 3 || b->piece[ml[i]->end] == 5)
+        )
+            return true;
     }
-    // 3. ray-check in diagonal directions for an enemy piece
-    for(int i = 0; i < 2; i++) {
-        for(int inv = -1; inv <= 1; inv += 2) {
-            int k = 1;
-            // special check for pawns
-            if (
-                inv == color
-                && b->color[square + inv*ray[2][i]] == color*-1
-                && b->piece[square + inv*ray[2][i]] == 1
-            ) {
-                // re-add the king
-                if (color == 1) {
-                    b->piece[b->king_square[0]] = 6;
-                    b->color[b->king_square[0]] = 1;
-                } else {
-                    b->piece[b->king_square[1]] = 6;
-                    b->color[b->king_square[1]] = -1;
-                }
-                return true;
-            }
-            while (b->piece[square + inv*ray[2][i] * k] == 7) {
-                k++;
-            }
-            if (
-                b->color[square + inv*ray[2][i] * k] == color*-1
-                && (
-                    b->piece[square + inv*ray[2][i] * k] == 3
-                    || b->piece[square + inv*ray[2][i] * k] == 5
-                )
-            ) {
-                // re-add the king
-                if (color == 1) {
-                    b->piece[b->king_square[0]] = 6;
-                    b->color[b->king_square[0]] = 1;
-                } else {
-                    b->piece[b->king_square[1]] = 6;
-                    b->color[b->king_square[1]] = -1;
-                }
-                return true;
-            }
-        }
+    destroy_move_list(ml);
+
+    // check rook and line queen moves
+    ml = create_move_list();
+    n = 0;
+    n = add_move_list(b, square, ml, n, 4, color);
+    for (int i = 0; i < n; i++) {
+        if (
+            b->color[ml[i]->end] == color*-1
+            && (b->piece[ml[i]->end] == 4 || b->piece[ml[i]->end] == 5)
+        )
+            return true;
     }
-    // re-add the king
-    if (color == 1) {
-        b->piece[b->king_square[0]] = 6;
-        b->color[b->king_square[0]] = 1;
-    } else {
-        b->piece[b->king_square[1]] = 6;
-        b->color[b->king_square[1]] = -1;
-    }
+    destroy_move_list(ml);
+
     return false;
 }
 
