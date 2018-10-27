@@ -123,7 +123,6 @@ move best_move(board b, int depth, bool display) {
 }
 
 int checks = 0;
-
 int perft(board b, int depth) {
     if (depth == 0) {
         if (is_king_checked(b, b->who))

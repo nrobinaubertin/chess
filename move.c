@@ -126,22 +126,22 @@ int add_move_list(board b, int square, move* ml, int n, int piece, int color) {
     switch (piece) {
         case 1: // PAWN
             if (b->piece[square + 10 * color] == 7) {
-                add_move_to_ml(ml, n, square, square + 10*color);
+                add_move_to_ml(ml, n, square, square + 10 * color);
                 n++;
                 if (
                     (square/10 == 3 || square/10 == 8)
                     && b->piece[square + 20 * color] == 7
                 ) {
-                    add_move_to_ml(ml, n, square, square + 20*color);
+                    add_move_to_ml(ml, n, square, square + 20 * color);
                     n++;
                 }
             }
             if (b->color[square + 10 * color + 1] == color * -1) {
-                add_move_to_ml(ml, n, square, square + 10*color + 1);
+                add_move_to_ml(ml, n, square, square + 10 * color + 1);
                 n++;
             }
             if (b->color[square + 10 * color - 1] == color * -1) {
-                add_move_to_ml(ml, n, square, square + 10*color - 1);
+                add_move_to_ml(ml, n, square, square + 10 * color - 1);
                 n++;
             }
             return n;
@@ -227,29 +227,16 @@ bool is_square_checked(board b, int color, int square) {
     int n;
 
     // check for pawn attacks
-    if (color == 1) {
-        if (
-            b->piece[b->king_square[0] + 11] == 1
-            && b->color[b->king_square[0] + 11] == -1
-        )
-            return true;
-        if (
-            b->piece[b->king_square[0] + 9] == 1
-            && b->color[b->king_square[0] + 9] == -1
-        )
-            return true;
-    } else {
-        if (
-            b->piece[b->king_square[1] - 11] == 1
-            && b->color[b->king_square[1] - 11] == 1
-        )
-            return true;
-        if (
-            b->piece[b->king_square[1] - 9] == 1
-            && b->color[b->king_square[1] - 9] == 1
-        )
-            return true;
-    }
+    if (
+        b->piece[square + 10 * color + 1] == 1
+        && b->color[square + 10 * color + 1] == color * -1
+    )
+        return true;
+    if (
+        b->piece[square + 10 * color - 1] == 1
+        && b->color[square + 10 * color - 1] == color * -1
+    )
+        return true;
 
     // check knight moves
     ml = create_move_list();
