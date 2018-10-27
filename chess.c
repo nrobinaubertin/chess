@@ -140,6 +140,7 @@ int perft(board b, int depth) {
         destroy_board(bb);
         i++;
     }
+    destroy_move_list(ml);
     return nodes;
 }
 
