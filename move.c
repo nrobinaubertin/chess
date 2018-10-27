@@ -311,6 +311,10 @@ void apply_move(move m, board b) {
         i++;
     b->keys_history[i] = b->key;
 
+    // change turn and adjust key accordingly
+    b->key ^= hashpool[4];
+    b->who *= -1;
+
     // is it a castle move ?
     switch (m->end) {
         default:
@@ -318,18 +322,26 @@ void apply_move(move m, board b) {
         case 100:
             atomic_move(b, 25, 27);
             atomic_move(b, 28, 26);
+            change_castling_rights(b, 0, false);
+            change_castling_rights(b, 1, false);
             return;
         case 101:
             atomic_move(b, 25, 23);
             atomic_move(b, 21, 24);
+            change_castling_rights(b, 0, false);
+            change_castling_rights(b, 1, false);
             return;
         case 102:
             atomic_move(b, 95, 97);
             atomic_move(b, 98, 96);
+            change_castling_rights(b, 2, false);
+            change_castling_rights(b, 3, false);
             return;
         case 103:
             atomic_move(b, 95, 93);
             atomic_move(b, 91, 94);
+            change_castling_rights(b, 2, false);
+            change_castling_rights(b, 3, false);
             return;
     }
 
@@ -364,8 +376,4 @@ void apply_move(move m, board b) {
             }
             break;
     }
-
-    // change turn and adjust key accordingly
-    b->key ^= hashpool[4];
-    b->who *= -1;
 }
