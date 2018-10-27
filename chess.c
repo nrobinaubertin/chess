@@ -164,8 +164,6 @@ void play_alone(int depth) {
         if (m)
             free(m);
         turn++;
-        if (turn > 1)
-            exit(0);
     }
 
     if (w == 1) {
@@ -207,8 +205,56 @@ void execute_perft(int depth) {
     destroy_board(b);
 }
 
+move askForMove() {
+    char start[2];
+    char end[2];
+    printf("move: ");
+    scanf(" %c%c%c%c", &start[0], &start[1], &end[0], &end[1]);
+    // TODO handle castling
+    move m = malloc(sizeof(struct move));
+    m->start = coord2int(start);
+    m->end = coord2int(end);
+    return m;
+}
+
+void play(int color, int depth) {
+    srand((unsigned) time(NULL));
+    init_hashtable();
+    init_hashpool();
+    board b = create_board();
+    init_board(b);
+    print_board(b);
+
+    int w = 0;
+    move m = NULL;
+    while (!(w = is_game_over(b, true))) {
+        if (b->who == color) {
+            m = best_move(b, depth, false);
+        } else {
+            m = askForMove();
+        }
+        printf("\n");
+        print_move(m);
+        printf("\n");
+        apply_move(m, b);
+        print_board(b);
+        free(m);
+    }
+
+    if (w == 1) {
+        printf("White wins !\n");
+    } else if (w == -1) {
+        printf("Black wins !\n");
+    } else {
+        printf("Draw !\n");
+    }
+    free(hashpool);
+    destroy_hashtable();
+}
+
 int main(int argc, char* argv[]) {
     // find_best_starting_move(atoi(argv[1]));
-    execute_perft(atoi(argv[1]));
+    // execute_perft(atoi(argv[1]));
+    play(-1, atoi(argv[1]));
     return EXIT_SUCCESS;
 }
