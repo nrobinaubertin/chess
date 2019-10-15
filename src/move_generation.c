@@ -279,9 +279,15 @@ void change_castling_rights(board b, int castle, bool value) {
 }
 
 // apply the input move on the given board
-void apply_move(move m, board b) {
+// returns informations about the move
+// 0: no info
+// 1: it was a capture
+// 2: it was a castle move
+int apply_move(move m, board b) {
     assert(m != NULL);
     assert(b != NULL);
+
+    int is_capture = 0;
 
     // add current key to the board keys_history
     int i = 0;
@@ -303,37 +309,35 @@ void apply_move(move m, board b) {
             atomic_move(b, 28, 26);
             change_castling_rights(b, 0, false);
             change_castling_rights(b, 1, false);
-            return;
+            return 2;
         // white big castle
         case 101:
             atomic_move(b, 25, 23);
             atomic_move(b, 21, 24);
             change_castling_rights(b, 0, false);
             change_castling_rights(b, 1, false);
-            return;
+            return 2;
         // black small castle
         case 102:
             atomic_move(b, 95, 97);
             atomic_move(b, 98, 96);
             change_castling_rights(b, 2, false);
             change_castling_rights(b, 3, false);
-            return;
+            return 2;
         // black big castle
         case 103:
             atomic_move(b, 95, 93);
             atomic_move(b, 91, 94);
             change_castling_rights(b, 2, false);
             change_castling_rights(b, 3, false);
-            return;
+            return 2;
     }
 
-    atomic_move(b, m->start, m->end);
-
-    // special cases
-    switch (b->piece[m->end]) {
+    // special state changes depending on the moving piece
+    switch (b->piece[m->start]) {
         case 6:
             // king move
-            if (b->color[m->end] == 1) {
+            if (b->color[m->start] == 1) {
                 b->king_square[0] = m->end;
                 change_castling_rights(b, 0, false);
                 change_castling_rights(b, 1, false);
@@ -345,7 +349,7 @@ void apply_move(move m, board b) {
             break;
         case 4:
             // rook move
-            if (b->color[m->end] == 1) {
+            if (b->color[m->start] == 1) {
                 if (m->start == 21)
                     change_castling_rights(b, 0, false);
                 if (m->start == 28)
@@ -358,4 +362,11 @@ void apply_move(move m, board b) {
             }
             break;
     }
+
+    if (b->piece[m->end] != 7)
+        is_capture = 1;
+
+    atomic_move(b, m->start, m->end);
+
+    return is_capture;
 }

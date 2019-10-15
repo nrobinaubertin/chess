@@ -16,6 +16,6 @@ bool is_king_checked(board b, int color);
 bool is_square_checked(board b, int color, int square);
 void atomic_move(board b, int start, int end);
 void change_castling_rights(board b, int castle, bool value);
-void apply_move(move m, board b);
+int apply_move(move m, board b);
 
 #endif

@@ -128,10 +128,22 @@ move best_move(board b, int depth, bool display) {
 // obviously, since this engine doesn't take "en passant" into account,
 // values are going to differ starting depth 5
 int checks = 0;
-int perft(board b, int depth) {
+int captures = 0;
+int castles = 0;
+int perft(board b, int depth, int last_move_type) {
     if (depth == 0) {
         if (is_king_checked(b, b->who))
             checks++;
+        switch (last_move_type) {
+            case 2:
+                castles++;
+                break;
+            case 1:
+                captures++;
+                break;
+            default:
+                break;
+        }
         return 1;
     }
     int nodes = 0;
@@ -139,9 +151,9 @@ int perft(board b, int depth) {
     int i = 0;
     while (i < ml->size) {
         board bb = copy_board(b);
-        apply_move(ml->list[i], bb);
+        last_move_type = apply_move(ml->list[i], bb);
         if (!is_king_checked(bb, bb->who*-1))
-            nodes += perft(bb, depth - 1);
+            nodes += perft(bb, depth - 1, last_move_type);
         destroy_board(bb);
         i++;
     }
@@ -207,8 +219,10 @@ void execute_perft(int depth) {
     //init_hashpool();
     board b = create_board();
     init_board(b);
-    printf("nodes: %d\n", perft(b, depth));
+    printf("nodes: %d\n", perft(b, depth, 0));
     printf("checks: %d\n", checks);
+    printf("castles: %d\n", castles);
+    printf("captures: %d\n", captures);
     destroy_board(b);
 }
 
