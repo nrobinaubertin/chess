@@ -1,5 +1,6 @@
-#include "evaluate.h"
 #include <stdlib.h>
+
+#include "evaluate.h"
 
 // Piece-Square Tables
 

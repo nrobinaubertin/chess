@@ -1,7 +1,7 @@
+#include "util.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include "util.h"
 
 int max(int a, int b) {
     if (a > b) {

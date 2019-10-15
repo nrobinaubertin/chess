@@ -1,3 +1,11 @@
+#include "evaluate.h"
+#include "move_generation.h"
+#include "print.h"
+#include "board.h"
+#include "move.h"
+#include "move_list.h"
+#include "util.h"
+//#include "zobrist.h"
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -7,26 +15,19 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "board.h"
-#include "evaluate.h"
-#include "move.h"
-#include "print.h"
-#include "util.h"
-#include "zobrist.h"
-
 int is_game_over(board b, bool check_draws) {
     // check for draw
-    if (check_draws) {
-        int n = 0;
-        int it = 0;
-        while (b->keys_history[it] != 0) {
-            it++;
-            if (b->key == b->keys_history[it])
-                n++;
-        }
-        if (n > 2)
-            return 100;
-    }
+    //if (check_draws) {
+    //    int n = 0;
+    //    int it = 0;
+    //    while (b->keys_history[it] != 0) {
+    //        it++;
+    //        if (b->key == b->keys_history[it])
+    //            n++;
+    //    }
+    //    if (n > 2)
+    //        return 100;
+    //}
     bool white = false;
     bool black = false;
     for (int i = 0; i < 8; i++) {
@@ -50,9 +51,9 @@ int is_game_over(board b, bool check_draws) {
 }
 
 int search(board b, int depth, int alpha, int beta) {
-    entry e = find_hashtable(b->key);
-    if (e && e->depth > depth)
-        return e->score;
+    //entry e = find_hashtable(b->key);
+    //if (e && e->depth > depth)
+    //    return e->score;
     if (depth == 0)
         return evaluate(b);
     int state = is_game_over(b, true);
@@ -62,16 +63,16 @@ int search(board b, int depth, int alpha, int beta) {
         return evaluate(b);
     }
     int value = -100000;
-    move* ml = gen_all_moves(b);
+    move_list ml = gen_all_moves(b);
     int i = 0;
-    while (ml[i] != NULL) {
+    while (ml->list[i] != NULL) {
         board bb = copy_board(b);
-        apply_move(ml[i], bb);
+        apply_move(ml->list[i], bb);
         bb->score = -search(bb, depth - 1, beta*-1, alpha*-1);
         value = max(value, bb->score);
         alpha = max(alpha, value);
-        if (depth > 2)
-            add_hashtable(create_entry(bb, depth));
+        //if (depth > 2)
+        //    add_hashtable(create_entry(bb, depth));
         destroy_board(bb);
         if (alpha >= beta)
             break;
@@ -99,20 +100,20 @@ int MTDF(board b, int f, int depth) {
 move best_move(board b, int depth, bool display) {
     move best_move = NULL;
     int max = -10000;
-    move* ml = gen_all_moves(b);
+    move_list ml = gen_all_moves(b);
     int i = 0;
-    while (ml[i] != NULL) {
+    while (ml->list[i] != NULL) {
         board bb = copy_board(b);
-        apply_move(ml[i], bb);
+        apply_move(ml->list[i], bb);
         int score = -MTDF(bb, 0, depth - 1);
         if (display) {
             printf("\n");
-            print_move(ml[i]);
+            print_move(ml->list[i]);
             printf("score: %d\n", score);
         }
         if (score > max) {
             max = score;
-            best_move = ml[i];
+            best_move = ml->list[i];
         }
         destroy_board(bb);
         i++;
@@ -122,6 +123,10 @@ move best_move(board b, int depth, bool display) {
     return best_move;
 }
 
+// perft test: recursively count all move nodes and checks
+// compare results with https://chessprogramming.org/Perft_Results
+// obviously, since this engine doesn't take "en passant" into account,
+// values are going to differ starting depth 5
 int checks = 0;
 int perft(board b, int depth) {
     if (depth == 0) {
@@ -130,11 +135,11 @@ int perft(board b, int depth) {
         return 1;
     }
     int nodes = 0;
-    move* ml = gen_all_moves(b);
+    move_list ml = gen_all_moves(b);
     int i = 0;
-    while (ml[i]) {
+    while (i < ml->size) {
         board bb = copy_board(b);
-        apply_move(ml[i], bb);
+        apply_move(ml->list[i], bb);
         if (!is_king_checked(bb, bb->who*-1))
             nodes += perft(bb, depth - 1);
         destroy_board(bb);
@@ -144,10 +149,11 @@ int perft(board b, int depth) {
     return nodes;
 }
 
+// this will make the AI play against itself
 void play_alone(int depth) {
     srand((unsigned) time(NULL));
-    init_hashtable();
-    init_hashpool();
+    //init_hashtable();
+    //init_hashpool();
     board b = create_board();
     init_board(b);
     print_board(b);
@@ -173,14 +179,14 @@ void play_alone(int depth) {
     } else {
         printf("Draw !\n");
     }
-    free(hashpool);
-    destroy_hashtable();
+    //free(hashpool);
+    //destroy_hashtable();
 }
 
 void find_best_starting_move(int depth) {
     srand((unsigned) time(NULL));
-    init_hashtable();
-    init_hashpool();
+    //init_hashtable();
+    //init_hashpool();
     board b = create_board();
     init_board(b);
     print_board(b);
@@ -194,10 +200,11 @@ void find_best_starting_move(int depth) {
     destroy_board(b);
 }
 
+// execute perft test
 void execute_perft(int depth) {
-    srand((unsigned) time(NULL));
-    init_hashtable();
-    init_hashpool();
+    //srand((unsigned) time(NULL));
+    //init_hashtable();
+    //init_hashpool();
     board b = create_board();
     init_board(b);
     printf("nodes: %d\n", perft(b, depth));
@@ -205,6 +212,7 @@ void execute_perft(int depth) {
     destroy_board(b);
 }
 
+// prompt human for next move
 move askForMove() {
     char start[2];
     char end[2];
@@ -217,10 +225,11 @@ move askForMove() {
     return m;
 }
 
+// play against human
 void play(int color, int depth) {
     srand((unsigned) time(NULL));
-    init_hashtable();
-    init_hashpool();
+    //init_hashtable();
+    //init_hashpool();
     board b = create_board();
     init_board(b);
     print_board(b);
@@ -248,13 +257,29 @@ void play(int color, int depth) {
     } else {
         printf("Draw !\n");
     }
-    free(hashpool);
-    destroy_hashtable();
+    //free(hashpool);
+    //destroy_hashtable();
 }
 
 int main(int argc, char* argv[]) {
-    // find_best_starting_move(atoi(argv[1]));
-    // execute_perft(atoi(argv[1]));
-    play(-1, atoi(argv[1]));
+    if (!argv[1]) {
+        printf("No argument !\n");
+        return EXIT_FAILURE;
+    }
+    if (strcmp(argv[1], "start") == 0) {
+        find_best_starting_move(atoi(argv[2]));
+    } else if(strcmp(argv[1], "perft") == 0) {
+        if (!argv[2]) {
+            printf("No perft depth !\n");
+            return EXIT_FAILURE;
+        }
+        execute_perft(atoi(argv[2]));
+    } else if(strcmp(argv[1], "play") == 0) {
+        play(-1, atoi(argv[2]));
+    } else if(strcmp(argv[1], "alone") == 0) {
+        play_alone(atoi(argv[2]));
+    } else {
+        printf("Unknown command.\n");
+    }
     return EXIT_SUCCESS;
 }

@@ -1,7 +1,7 @@
+#include "zobrist.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "zobrist.h"
 
 #define HASHTABLE_SIZE 1000000
 

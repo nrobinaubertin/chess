@@ -1,9 +1,5 @@
-#include <stdio.h>
-
 #include "print.h"
-#include "board.h"
-#include "util.h"
-#include "move.h"
+#include <stdio.h>
 
 void print_square(int color, int piece) {
     if (color == 1) {
