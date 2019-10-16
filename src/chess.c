@@ -133,33 +133,13 @@ int castles = 0;
 int checkmates = 0;
 int perft(board b, int depth, int last_move_type) {
 
-    // count nodes and various statistics
+    // count various statistics for leaf nodes
     if (depth == 0) {
         if (is_king_checked(b, b->who)) {
             checks++;
-
-            // test if this is a checkmate
-            // TODO: write a is_checkmate function
-            int checkmate = 1;
-            move_list ml = gen_all_moves(b);
-            for (int i = 0; i < ml->size; i++) {
-                board bb = copy_board(b);
-                apply_move(ml->list[i], bb);
-                // rule out moves that keep the king in check
-                if (!is_king_checked(bb, bb->who*-1)) {
-                    checkmate = 0;
-                    break;
-                }
-                destroy_board(bb);
-            }
-
-            // if no legal move was found, then it must be checkmate
-            // (not counting draws for now)
-            if (checkmate == 1) {
-                checkmates++;
-            }
-
-            destroy_move_list(ml);
+        }
+        if (is_checkmate(b)) {
+            checkmates++;
         }
         switch (last_move_type) {
             case 2:

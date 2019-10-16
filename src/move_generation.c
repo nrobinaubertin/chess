@@ -184,6 +184,25 @@ move_list add_castle_moves(board b, move_list ml, int color) {
     return ml;
 }
 
+bool is_checkmate(board b) {
+    if (!is_king_checked(b, b->who)) {
+        return false;
+    }
+    bool checkmate = true;
+    move_list ml = gen_all_moves(b);
+    for (int i = 0; i < ml->size; i++) {
+        board bb = copy_board(b);
+        apply_move(ml->list[i], bb);
+        // rule out moves that keep the king in check
+        if (!is_king_checked(bb, bb->who*-1)) {
+            checkmate = false;
+            break;
+        }
+        destroy_board(bb);
+    }
+    return checkmate;
+}
+
 bool is_king_checked(board b, int color) {
     if (color == 1)
         return is_square_checked(b, color, b->king_square[0]);
