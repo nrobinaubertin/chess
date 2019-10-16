@@ -130,10 +130,37 @@ move best_move(board b, int depth, bool display) {
 int checks = 0;
 int captures = 0;
 int castles = 0;
+int checkmates = 0;
 int perft(board b, int depth, int last_move_type) {
+
+    // count nodes and various statistics
     if (depth == 0) {
-        if (is_king_checked(b, b->who))
+        if (is_king_checked(b, b->who)) {
             checks++;
+
+            // test if this is a checkmate
+            // TODO: write a is_checkmate function
+            int checkmate = 1;
+            move_list ml = gen_all_moves(b);
+            for (int i = 0; i < ml->size; i++) {
+                board bb = copy_board(b);
+                apply_move(ml->list[i], bb);
+                // rule out moves that keep the king in check
+                if (!is_king_checked(bb, bb->who*-1)) {
+                    checkmate = 0;
+                    break;
+                }
+                destroy_board(bb);
+            }
+
+            // if no legal move was found, then it must be checkmate
+            // (not counting draws for now)
+            if (checkmate == 1) {
+                checkmates++;
+            }
+
+            destroy_move_list(ml);
+        }
         switch (last_move_type) {
             case 2:
                 castles++;
@@ -146,16 +173,17 @@ int perft(board b, int depth, int last_move_type) {
         }
         return 1;
     }
+
     int nodes = 0;
     move_list ml = gen_all_moves(b);
-    int i = 0;
-    while (i < ml->size) {
+    for (int i = 0; i < ml->size; i++) {
         board bb = copy_board(b);
         last_move_type = apply_move(ml->list[i], bb);
-        if (!is_king_checked(bb, bb->who*-1))
+        // rule out moves that keep the king in check
+        if (!is_king_checked(bb, bb->who*-1)) {
             nodes += perft(bb, depth - 1, last_move_type);
+        }
         destroy_board(bb);
-        i++;
     }
     destroy_move_list(ml);
     return nodes;
@@ -223,6 +251,7 @@ void execute_perft(int depth) {
     printf("checks: %d\n", checks);
     printf("castles: %d\n", castles);
     printf("captures: %d\n", captures);
+    printf("checkmates: %d\n", checkmates);
     destroy_board(b);
 }
 
