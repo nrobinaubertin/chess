@@ -64,8 +64,7 @@ int search(board b, int depth, int alpha, int beta) {
     }
     int value = -100000;
     move_list ml = gen_all_moves(b);
-    int i = 0;
-    while (ml->list[i] != NULL) {
+    for (int i = 0; i < ml->size; i++) {
         board bb = copy_board(b);
         apply_move(ml->list[i], bb);
         bb->score = -search(bb, depth - 1, beta*-1, alpha*-1);
@@ -76,7 +75,6 @@ int search(board b, int depth, int alpha, int beta) {
         destroy_board(bb);
         if (alpha >= beta)
             break;
-        i++;
     }
     destroy_move_list(ml);
     return value;
@@ -101,8 +99,7 @@ move best_move(board b, int depth, bool display) {
     move best_move = NULL;
     int max = -10000;
     move_list ml = gen_all_moves(b);
-    int i = 0;
-    while (ml->list[i] != NULL) {
+    for (int i = 0; i < ml->size; i++) {
         board bb = copy_board(b);
         apply_move(ml->list[i], bb);
         int score = -MTDF(bb, 0, depth - 1);
@@ -116,7 +113,6 @@ move best_move(board b, int depth, bool display) {
             best_move = ml->list[i];
         }
         destroy_board(bb);
-        i++;
     }
     best_move = copy_move(best_move);
     destroy_move_list(ml);
@@ -171,7 +167,6 @@ int perft(board b, int depth, int last_move_type) {
 
 // this will make the AI play against itself
 void play_alone(int depth) {
-    srand((unsigned) time(NULL));
     //init_hashtable();
     //init_hashpool();
     board b = create_board();
@@ -204,7 +199,6 @@ void play_alone(int depth) {
 }
 
 void find_best_starting_move(int depth) {
-    srand((unsigned) time(NULL));
     //init_hashtable();
     //init_hashpool();
     board b = create_board();
@@ -222,7 +216,6 @@ void find_best_starting_move(int depth) {
 
 // execute perft test
 void execute_perft(int depth) {
-    //srand((unsigned) time(NULL));
     //init_hashtable();
     //init_hashpool();
     board b = create_board();
@@ -250,7 +243,6 @@ move askForMove() {
 
 // play against human
 void play(int color, int depth) {
-    srand((unsigned) time(NULL));
     //init_hashtable();
     //init_hashpool();
     board b = create_board();
@@ -285,6 +277,7 @@ void play(int color, int depth) {
 }
 
 int main(int argc, char* argv[]) {
+    //srand((unsigned) time(NULL));
     if (!argv[1]) {
         printf("No argument !\n");
         return EXIT_FAILURE;
@@ -293,13 +286,21 @@ int main(int argc, char* argv[]) {
         find_best_starting_move(atoi(argv[2]));
     } else if(strcmp(argv[1], "perft") == 0) {
         if (!argv[2]) {
-            printf("No perft depth !\n");
+            printf("No depth !\n");
             return EXIT_FAILURE;
         }
         execute_perft(atoi(argv[2]));
     } else if(strcmp(argv[1], "play") == 0) {
+        if (!argv[2]) {
+            printf("No depth !\n");
+            return EXIT_FAILURE;
+        }
         play(-1, atoi(argv[2]));
     } else if(strcmp(argv[1], "alone") == 0) {
+        if (!argv[2]) {
+            printf("No depth !\n");
+            return EXIT_FAILURE;
+        }
         play_alone(atoi(argv[2]));
     } else {
         printf("Unknown command.\n");

@@ -1,24 +1,25 @@
 CC=clang
-CFLAGS=-DNDEBUG -O3 -Wall -Wno-unused-result -std=c11 -pedantic -Wno-return-stack-address -I./include
-# debug flags
-CDFLAGS=-ggdb -Wall -Wno-unused-result -std=c11 -pedantic -Wno-return-stack-address -I./include
-LDFLAGS=
+CFLAGS=-Wall -Wno-unused-result -std=c11 -pedantic -Wno-return-stack-address -I./include
+DFLAGS=-ggdb
+RFLAGS=-DNDEBUG -O3
+LFLAGS=
 
 src = $(wildcard src/*.c) $(wildcard src/structs/*.c)
 obj = $(src:.c=.o)
 
-all: chess
+debug: CFLAGS+=$(DFLAGS)
+debug: chess
+
+release: CFLAGS+=$(RFLAGS)
+release: chess
 
 chess: $(obj)
-	$(CC) $(LDFLAGS) -o $@ $^
-
-#$(obj): $(src)
-#	$(CC) -o $@ -c $< $(CDFLAGS)
+	$(CC) $(LFLAGS) -o $@ $^
 
 %.o: %.c
-	$(CC) -o $@ -c $< $(CDFLAGS)
+	$(CC) -o $@ -c $< $(CFLAGS)
 
 clean:
 	rm -f $(obj) chess
 
-.PHONY: clean all
+.PHONY: clean all debug release

@@ -1,4 +1,5 @@
 #include "move_generation.h"
+#include "move.h"
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
@@ -15,13 +16,12 @@ static const int ray[5][5] = {
 };
 
 move_list gen_all_moves(board b) {
-    int color = b->who;
     move_list ml = create_move_list();
-    add_castle_moves(b, ml, color);
+    add_castle_moves(b, ml, b->who);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             int k = 21 + j + 10*i;
-            if (b->color[k] == color) {
+            if (b->color[k] == b->who) {
                 add_move_list(b, k, ml, b->piece[k], b->color[k]);
             }
         }
@@ -54,7 +54,7 @@ void add_move_to_ml(move_list ml, int start, int end) {
     assert(start < 120);
     assert(end > 0);
     assert(end < 120);
-    move m = malloc(sizeof(struct move));
+    move m = create_move();
     m->start = start;
     m->end = end;
     push_move_list(ml, m);
