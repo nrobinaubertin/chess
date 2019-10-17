@@ -84,10 +84,14 @@ void print_int2coord(int k) {
     free(c);
 }
 
-void print_move(move m) {
+void print_move(move m, bool debug) {
     char* c1 = int2coord(m->start);
     char* c2 = int2coord(m->end);
-    printf("%c%c -> %c%c (%d -> %d)\n", c1[0], c1[1], c2[0], c2[1], m->start, m->end);
+    if (debug) {
+        printf("%c%c -> %c%c (%d -> %d)\n", c1[0], c1[1], c2[0], c2[1], m->start, m->end);
+    } else {
+        printf("%c%c -> %c%c\n", c1[0], c1[1], c2[0], c2[1]);
+    }
     // printf("%c%c -> %c%c (%d -> %d)\n", c1[0], c1[1], c2[0], c2[1]);
     free(c1);
     free(c2);

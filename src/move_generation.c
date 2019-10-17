@@ -151,7 +151,7 @@ move_list add_castle_moves(board b, move_list ml, int color) {
             && b->color[24] == 0
             && !is_square_checked(b, 1, 24)
         ) {
-            add_move_to_ml(ml, b->king_square[0], 101);
+            add_move_to_ml(ml, 25, 23);
         }
         if (
             b->castling_rights[0]
@@ -159,7 +159,7 @@ move_list add_castle_moves(board b, move_list ml, int color) {
             && b->color[26] == 0
             && !is_square_checked(b, 1, 26)
         ) {
-            add_move_to_ml(ml, b->king_square[0], 100);
+            add_move_to_ml(ml, 25, 27);
         }
     } else {
         if (
@@ -169,7 +169,7 @@ move_list add_castle_moves(board b, move_list ml, int color) {
             && b->color[94] == 0
             && !is_square_checked(b, -1, 94)
         ) {
-            add_move_to_ml(ml, b->king_square[0], 103);
+            add_move_to_ml(ml, 95, 93);
         }
         if (
             b->castling_rights[2]
@@ -178,7 +178,7 @@ move_list add_castle_moves(board b, move_list ml, int color) {
             && !is_king_checked(b, color)
             && !is_square_checked(b, -1, 96)
         ) {
-            add_move_to_ml(ml, b->king_square[0], 102);
+            add_move_to_ml(ml, 95, 97);
         }
     }
     return ml;
@@ -322,40 +322,41 @@ int apply_move(move m, board b) {
 
     // change turn and adjust key accordingly
     //b->key ^= hashpool[4];
-    b->who *= -1;
+    int color = b->who; // save color for use in this function
+    b->who *= -1; // we change the color of the board now because of early returns
 
     // is it a castle move ?
-    switch (m->end) {
-        default:
-            break;
-        // white small castle
-        case 100:
+    if (color == 1 && m->start == 25 && b->piece[25] == 6) {
+        if (m->end == 27) {
             atomic_move(b, 25, 27);
             atomic_move(b, 28, 26);
             change_castling_rights(b, 0, false);
             change_castling_rights(b, 1, false);
             return 2;
-        // white big castle
-        case 101:
+        }
+        if (m->end == 23) {
             atomic_move(b, 25, 23);
             atomic_move(b, 21, 24);
             change_castling_rights(b, 0, false);
             change_castling_rights(b, 1, false);
             return 2;
-        // black small castle
-        case 102:
+        }
+    }
+    if (color == -1 && m->start == 95 && b->piece[95] == 6) {
+        if (m->end == 97) {
             atomic_move(b, 95, 97);
             atomic_move(b, 98, 96);
             change_castling_rights(b, 2, false);
             change_castling_rights(b, 3, false);
             return 2;
-        // black big castle
-        case 103:
+        }
+        if (m->end == 93) {
             atomic_move(b, 95, 93);
             atomic_move(b, 91, 94);
             change_castling_rights(b, 2, false);
             change_castling_rights(b, 3, false);
             return 2;
+        }
     }
 
     // special state changes depending on the moving piece

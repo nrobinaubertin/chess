@@ -105,7 +105,7 @@ move best_move(board b, int depth, bool display) {
         int score = -MTDF(bb, 0, depth - 1);
         if (display) {
             printf("\n");
-            print_move(ml->list[i]);
+            print_move(ml->list[i], true);
             printf("score: %d\n", score);
         }
         if (score > max) {
@@ -180,7 +180,7 @@ void play_alone(int depth, int duration, bool debug) {
     int turn = 0;
     while (!(w = is_game_over(b, true)) && turn < duration) {
         move m = best_move(b, depth, false);
-        print_move(m);
+        print_move(m, debug);
         apply_move(m, b);
         if (debug) {
             printf("\n");
@@ -212,7 +212,7 @@ void find_best_starting_move(int depth) {
     print_board(b);
     move m = best_move(b, depth, true);
     printf("\n");
-    print_move(m);
+    print_move(m, false);
     printf("\n");
     apply_move(m, b);
     print_board(b);
@@ -240,7 +240,6 @@ move askForMove() {
     char end[2];
     printf("move: ");
     scanf(" %c%c%c%c", &start[0], &start[1], &end[0], &end[1]);
-    // TODO handle castling
     move m = create_move();
     m->start = coord2int(start);
     m->end = coord2int(end);
@@ -264,7 +263,7 @@ void play(int color, int depth) {
             m = askForMove();
         }
         printf("\n");
-        print_move(m);
+        print_move(m, false);
         printf("\n");
         apply_move(m, b);
         print_board(b);
