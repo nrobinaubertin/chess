@@ -166,22 +166,27 @@ int perft(board b, int depth, int last_move_type) {
 }
 
 // this will make the AI play against itself
-void play_alone(int depth, int duration) {
+void play_alone(int depth, int duration, bool debug) {
     //init_hashtable();
     //init_hashpool();
     board b = create_board();
     init_board(b);
-    print_board(b);
+    if (debug) {
+        print_board(b);
+        printf("\n");
+    }
 
     int w = 0;
     int turn = 0;
     while (!(w = is_game_over(b, true)) && turn < duration) {
         move m = best_move(b, depth, false);
-        printf("\n");
         print_move(m);
-        printf("\n");
         apply_move(m, b);
-        print_board(b);
+        if (debug) {
+            printf("\n");
+            print_board(b);
+            printf("\n");
+        }
         if (m)
             free(m);
         turn++;
@@ -306,7 +311,7 @@ int main(int argc, char* argv[]) {
         if (argv[3]) {
             duration = atoi(argv[3]);
         }
-        play_alone(atoi(argv[2]), duration);
+        play_alone(atoi(argv[2]), duration, false);
     } else {
         printf("Unknown command.\n");
     }
