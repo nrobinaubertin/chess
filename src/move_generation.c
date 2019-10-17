@@ -233,8 +233,10 @@ bool is_square_checked(board b, int color, int square) {
         if (
             b->color[ml->list[i]->end] == color*-1
             && b->piece[ml->list[i]->end] == 2
-        )
+        ) {
+            destroy_move_list(ml);
             return true;
+        }
     }
     destroy_move_list(ml);
 
@@ -245,8 +247,10 @@ bool is_square_checked(board b, int color, int square) {
         if (
             b->color[ml->list[i]->end] == color*-1
             && (b->piece[ml->list[i]->end] == 3 || b->piece[ml->list[i]->end] == 5)
-        )
+        ) {
+            destroy_move_list(ml);
             return true;
+        }
     }
     destroy_move_list(ml);
 
@@ -257,8 +261,10 @@ bool is_square_checked(board b, int color, int square) {
         if (
             b->color[ml->list[i]->end] == color*-1
             && (b->piece[ml->list[i]->end] == 4 || b->piece[ml->list[i]->end] == 5)
-        )
+        ) {
+            destroy_move_list(ml);
             return true;
+        }
     }
     destroy_move_list(ml);
 
@@ -309,10 +315,10 @@ int apply_move(move m, board b) {
     int is_capture = 0;
 
     // add current key to the board keys_history
-    int i = 0;
-    while (b->keys_history[i] != 0)
-        i++;
-    b->keys_history[i] = b->key;
+    //int i = 0;
+    //while (b->keys_history[i] != 0)
+    //    i++;
+    //b->keys_history[i] = b->key;
 
     // change turn and adjust key accordingly
     //b->key ^= hashpool[4];

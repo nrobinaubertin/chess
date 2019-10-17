@@ -18,7 +18,7 @@ void init_move(move m, int start, int end) {
 }
 
 move copy_move(move m) {
-    move mm = malloc(sizeof(struct move));
+    move mm = calloc(1, sizeof(struct move));
     mm->start = m->start;
     mm->end = m->end;
     return mm;

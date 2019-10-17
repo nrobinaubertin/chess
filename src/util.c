@@ -56,7 +56,7 @@ char* int2coord(int k) {
     int i = (k - 21)/10;
     int j = k - 21 - 10 * i;
     char c[8] = "abcdefgh";
-    char* coord = malloc(sizeof(char) * 2);
+    char* coord = calloc(1, sizeof(char) * 2);
     coord[0] = c[j];
     coord[1] = i + 49;
     return coord;

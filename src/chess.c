@@ -166,7 +166,7 @@ int perft(board b, int depth, int last_move_type) {
 }
 
 // this will make the AI play against itself
-void play_alone(int depth) {
+void play_alone(int depth, int duration) {
     //init_hashtable();
     //init_hashpool();
     board b = create_board();
@@ -175,7 +175,7 @@ void play_alone(int depth) {
 
     int w = 0;
     int turn = 0;
-    while (!(w = is_game_over(b, true))) {
+    while (!(w = is_game_over(b, true)) && turn < duration) {
         move m = best_move(b, depth, false);
         printf("\n");
         print_move(m);
@@ -194,6 +194,7 @@ void play_alone(int depth) {
     } else {
         printf("Draw !\n");
     }
+    destroy_board(b);
     //free(hashpool);
     //destroy_hashtable();
 }
@@ -235,7 +236,7 @@ move askForMove() {
     printf("move: ");
     scanf(" %c%c%c%c", &start[0], &start[1], &end[0], &end[1]);
     // TODO handle castling
-    move m = malloc(sizeof(struct move));
+    move m = create_move();
     m->start = coord2int(start);
     m->end = coord2int(end);
     return m;
@@ -301,7 +302,11 @@ int main(int argc, char* argv[]) {
             printf("No depth !\n");
             return EXIT_FAILURE;
         }
-        play_alone(atoi(argv[2]));
+        int duration = 10;
+        if (argv[3]) {
+            duration = atoi(argv[3]);
+        }
+        play_alone(atoi(argv[2]), duration);
     } else {
         printf("Unknown command.\n");
     }
