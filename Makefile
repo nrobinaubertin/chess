@@ -1,5 +1,5 @@
 CC=clang
-CFLAGS=-Wall -Wno-unused-result -std=c11 -pedantic -Wno-return-stack-address -I./include
+CFLAGS=-Wall -pthread -Wno-unused-result -std=c11 -pedantic -Wno-return-stack-address -I./include
 DFLAGS=-ggdb
 RFLAGS=-DNDEBUG -O3
 LFLAGS=
