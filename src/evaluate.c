@@ -133,8 +133,9 @@ int evaluate(board b) {
                     }
                     break;
                 case 6:
-                    score += b->color[k] * 100000;
-                    break;
+                    //this should be checked at game state in search()
+                    //score += b->color[k] * 10000;
+                    //break;
                 default:
                     break;
             }

@@ -20,6 +20,11 @@ arg_t create_arg_t(board b, int f, int depth) {
     return input;
 }
 
+// returns:
+// 1: white wins
+// -1: black wins
+// 0: game is ongoing
+// 100: it's a draw
 int is_game_over(board b, bool check_draws) {
     // check for draw
     //if (check_draws) {
@@ -55,6 +60,7 @@ int is_game_over(board b, bool check_draws) {
     return -1;
 }
 
+// alpha-beta pruning
 int search(board b, int depth, int alpha, int beta) {
     //entry e = find_hashtable(b->key);
     //if (e && e->depth > depth)
@@ -65,9 +71,10 @@ int search(board b, int depth, int alpha, int beta) {
     if (state) {
         if (state == 100)
             return 0;
-        return evaluate(b);
+        return state * 10000;
+        //return evaluate(b);
     }
-    int value = -100000;
+    int value = -10000;
     move_list ml = gen_all_moves(b);
     for (int i = 0; i < ml->size; i++) {
         board bb = copy_board(b);
@@ -87,10 +94,10 @@ int search(board b, int depth, int alpha, int beta) {
 
 void* MTDF(void* input) {
     board b = ((arg_t)input)->b;
-    int f = ((arg_t)input)->f;
+    int f = evaluate(b);//((arg_t)input)->f;
     int depth = ((arg_t)input)->depth;
-    int upper = 100000;
-    int lower = -100000;
+    int upper = 10000;
+    int lower = -10000;
 
     while (lower < upper) {
         int beta = max(f, lower + 1);
