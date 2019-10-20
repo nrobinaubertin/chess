@@ -9,7 +9,14 @@
 #include <math.h>
 #include <stdio.h>
 
+typedef struct arg_t {
+    board b;
+    int f;
+    int depth;
+} *arg_t;
+
+arg_t create_arg_t(board b, int f, int depth);
 int is_game_over(board b, bool check_draws);
 int search(board b, int depth, int alpha, int beta);
-int MTDF(board b, int f, int depth);
-move best_move(board b, int depth, bool display);
+void* MTDF(void* input);
+move best_move(board b, int depth, int threads);

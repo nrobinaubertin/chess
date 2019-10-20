@@ -1,3 +1,5 @@
+#include "best_move.h"
+#include "multithread.h"
 #include "evaluate.h"
 #include "print.h"
 #include "board.h"
@@ -8,6 +10,15 @@
 #include <pthread.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+arg_t create_arg_t(board b, int f, int depth) {
+    arg_t input = calloc(1, sizeof(struct arg_t));
+    input->b = b;
+    input->f = f;
+    input->depth = depth;
+    return input;
+}
 
 int is_game_over(board b, bool check_draws) {
     // check for draw
@@ -74,9 +85,13 @@ int search(board b, int depth, int alpha, int beta) {
     return value;
 }
 
-int MTDF(board b, int f, int depth) {
+void* MTDF(void* input) {
+    board b = ((arg_t)input)->b;
+    int f = ((arg_t)input)->f;
+    int depth = ((arg_t)input)->depth;
     int upper = 100000;
     int lower = -100000;
+
     while (lower < upper) {
         int beta = max(f, lower + 1);
         f = search(b, depth, beta - 1, beta);
@@ -86,29 +101,38 @@ int MTDF(board b, int f, int depth) {
             lower = f;
         }
     }
-    return f;
+    int* ret = calloc(1, sizeof(int));
+    *ret = f;
+    return (void*) ret;
 }
 
-move best_move(board b, int depth, bool display) {
+// can return NULL, if it's the case, it's a resignation
+move best_move(board b, int depth, int threads) {
     move best_move = NULL;
     int max = -10000;
     move_list ml = gen_all_moves(b);
+    task_list tl = create_task_list();
     for (int i = 0; i < ml->size; i++) {
         board bb = copy_board(b);
         apply_move(ml->list[i], bb);
-        int score = -MTDF(bb, 0, depth - 1);
-        if (display) {
-            printf("\n");
-            print_move(ml->list[i], true);
-            printf("score: %d\n", score);
-        }
+        arg_t input = create_arg_t(bb, 0, depth - 1);
+        push_task_list(tl, create_task((void*) input, MTDF));
+    }
+
+    do_task_list(tl, threads);
+
+    for (int i = 0; i < tl->size; i++) {
+        assert(tl->list[i]->result);
+        int score = -*((int *)tl->list[i]->result);//-MTDF(input);
         if (score > max) {
             max = score;
             best_move = ml->list[i];
         }
-        destroy_board(bb);
+        free(((arg_t)tl->list[i]->payload)->b);
+        free(tl->list[i]->result);
     }
     best_move = copy_move(best_move);
+    destroy_task_list(tl);
     destroy_move_list(ml);
     return best_move;
 }

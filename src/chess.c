@@ -61,7 +61,7 @@ int perft(board b, int depth, int last_move_type) {
 }
 
 // this will make the AI play against itself
-void play_alone(int depth, int duration, bool debug) {
+void play_alone(int depth, int duration, bool debug, int threads) {
     board b = create_board();
     init_board(b);
     if (debug) {
@@ -72,7 +72,7 @@ void play_alone(int depth, int duration, bool debug) {
     int w = 0;
     int turn = 0;
     while (!(w = is_game_over(b, true)) && turn < duration) {
-        move m = best_move(b, depth, false);
+        move m = best_move(b, depth, threads);
 
         if (!m) {
             if (b->who == 1) {
@@ -108,11 +108,11 @@ void play_alone(int depth, int duration, bool debug) {
     destroy_board(b);
 }
 
-void find_best_starting_move(int depth) {
+void find_best_starting_move(int depth, int threads) {
     board b = create_board();
     init_board(b);
     print_board(b);
-    move m = best_move(b, depth, true);
+    move m = best_move(b, depth, threads);
     printf("\n");
     print_move(m, false);
     printf("\n");
@@ -147,7 +147,7 @@ move askForMove() {
 }
 
 // play against human
-void play(int color, int depth) {
+void play(int color, int depth, int threads) {
     board b = create_board();
     init_board(b);
     print_board(b);
@@ -156,7 +156,7 @@ void play(int color, int depth) {
     move m = NULL;
     while (!(w = is_game_over(b, true))) {
         if (b->who == color) {
-            m = best_move(b, depth, false);
+            m = best_move(b, depth, threads);
             if (!m) {
                 if (b->who == 1) {
                     printf("White resigns !\n");
@@ -195,7 +195,15 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
     if (strcmp(argv[1], "start") == 0) {
-        find_best_starting_move(atoi(argv[2]));
+        if (!argv[2]) {
+            printf("No depth !\n");
+            return EXIT_FAILURE;
+        }
+        if (!argv[3]) {
+            printf("No thread number !\n");
+            return EXIT_FAILURE;
+        }
+        find_best_starting_move(atoi(argv[2]), atoi(argv[3]));
     } else if(strcmp(argv[1], "perft") == 0) {
         if (!argv[2]) {
             printf("No depth !\n");
@@ -207,17 +215,20 @@ int main(int argc, char* argv[]) {
             printf("No depth !\n");
             return EXIT_FAILURE;
         }
-        play(-1, atoi(argv[2]));
-    } else if(strcmp(argv[1], "alone") == 0) {
-        if (!argv[2]) {
-            printf("No depth !\n");
+        if (!argv[3]) {
+            printf("No thread number !\n");
             return EXIT_FAILURE;
         }
-        int duration = 10;
-        if (argv[3]) {
-            duration = atoi(argv[3]);
+        play(-1, atoi(argv[2]), atoi(argv[3]));
+    } else if(strcmp(argv[1], "alone") == 0) {
+        if (argc < 4) {
+            printf("chess alone <depth> <duration> <threads>\n");
+            return EXIT_FAILURE;
         }
-        play_alone(atoi(argv[2]), duration, false);
+        int depth = atoi(argv[2]);
+        int duration = atoi(argv[3]);
+        int threads = atoi(argv[4]);
+        play_alone(depth, duration, false, threads);
     } else {
         printf("Unknown command.\n");
     }
