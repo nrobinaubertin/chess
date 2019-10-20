@@ -12,11 +12,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-arg_t create_arg_t(board b, int f, int depth) {
+arg_t create_arg_t(board b, int f, int depth, int qdepth) {
     arg_t input = calloc(1, sizeof(struct arg_t));
     input->b = b;
     input->f = f;
     input->depth = depth;
+    input->qdepth = qdepth;
     return input;
 }
 
@@ -60,13 +61,21 @@ int is_game_over(board b, bool check_draws) {
     return -1;
 }
 
+// Used by the MTDF search (not directly)
 // alpha-beta pruning
-int search(board b, int depth, int alpha, int beta) {
+int search(board b, int depth, int alpha, int beta, bool quiescent, int qdepth) {
     //entry e = find_hashtable(b->key);
     //if (e && e->depth > depth)
     //    return e->score;
-    if (depth == 0)
-        return evaluate(b);
+    if (depth == 0) {
+        if (quiescent) {
+            return evaluate(b);
+        } else {
+            // continue search in quiescent mode
+            depth = qdepth;
+            quiescent = true;
+        }
+    }
     int state = is_game_over(b, true);
     if (state) {
         if (state == 100)
@@ -75,11 +84,14 @@ int search(board b, int depth, int alpha, int beta) {
         //return evaluate(b);
     }
     int value = -10000;
-    move_list ml = gen_all_moves(b);
+    move_list ml = gen_all_moves(b, quiescent);
+    if (ml->size == 0 && quiescent) {
+        return evaluate(b);
+    }
     for (int i = 0; i < ml->size; i++) {
         board bb = copy_board(b);
         apply_move(ml->list[i], bb);
-        bb->score = -search(bb, depth - 1, beta*-1, alpha*-1);
+        bb->score = -search(bb, depth - 1, beta*-1, alpha*-1, quiescent, qdepth);
         value = max(value, bb->score);
         alpha = max(alpha, value);
         //if (depth > 2)
@@ -92,16 +104,18 @@ int search(board b, int depth, int alpha, int beta) {
     return value;
 }
 
+// MTDF search: https://en.wikipedia.org/wiki/MTD-f
 void* MTDF(void* input) {
     board b = ((arg_t)input)->b;
     int f = evaluate(b);//((arg_t)input)->f;
     int depth = ((arg_t)input)->depth;
+    int qdepth = ((arg_t)input)->qdepth;
     int upper = 10000;
     int lower = -10000;
 
     while (lower < upper) {
         int beta = max(f, lower + 1);
-        f = search(b, depth, beta - 1, beta);
+        f = search(b, depth, beta - 1, beta, false, qdepth);
         if (f < beta) {
             upper = f;
         } else {
@@ -114,15 +128,15 @@ void* MTDF(void* input) {
 }
 
 // can return NULL, if it's the case, it's a resignation
-move best_move(board b, int depth, int threads) {
+move best_move(board b, int depth, int threads, int qdepth) {
     move best_move = NULL;
     int max = -10000;
-    move_list ml = gen_all_moves(b);
+    move_list ml = gen_all_moves(b, false);
     task_list tl = create_task_list();
     for (int i = 0; i < ml->size; i++) {
         board bb = copy_board(b);
         apply_move(ml->list[i], bb);
-        arg_t input = create_arg_t(bb, 0, depth - 1);
+        arg_t input = create_arg_t(bb, 0, depth - 1, qdepth);
         push_task_list(tl, create_task((void*) input, MTDF));
     }
 

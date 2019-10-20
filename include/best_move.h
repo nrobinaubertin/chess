@@ -13,10 +13,11 @@ typedef struct arg_t {
     board b;
     int f;
     int depth;
+    int qdepth;
 } *arg_t;
 
-arg_t create_arg_t(board b, int f, int depth);
+arg_t create_arg_t(board b, int f, int depth, int qdepth);
 int is_game_over(board b, bool check_draws);
-int search(board b, int depth, int alpha, int beta);
+int search(board b, int depth, int alpha, int beta, bool quiescent, int qdepth);
 void* MTDF(void* input);
-move best_move(board b, int depth, int threads);
+move best_move(board b, int depth, int threads, int qdepth);
