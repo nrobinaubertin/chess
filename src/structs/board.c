@@ -114,28 +114,28 @@ void destroy_board(board b) {
 //    }
 //}
 
-//uint64_t hash_board(board b) {
-//    uint64_t hash = 0;
-//    for (int i = 0; i < 8; i++) {
-//        for (int j = 0; j < 8; j++) {
-//            int k = 21 + j + 10*i;
-//            switch (b->color[k]) {
-//                case 1:
-//                    hash ^= hashpool[10 + 120 * (b->piece[k] - 1) + k];
-//                    break;
-//                case -1:
-//                    hash ^= hashpool[730 + 120 * (b->piece[k] - 1) + k];
-//                    break;
-//                default:
-//                    break;
-//            }
-//        }
-//    }
-//    for(int i = 0; i < 4; i++) {
-//        if (b->castling_rights[i])
-//            hash ^= hashpool[i];
-//    }
-//    if (b->who == 1)
-//        hash ^= hashpool[4];
-//    return hash;
-//}
+uint64_t hash_board(board b, uint64_t* hashpool) {
+    uint64_t hash = 0;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            int k = 21 + j + 10*i;
+            switch (b->color[k]) {
+                case 1:
+                    hash ^= hashpool[10 + 120 * (b->piece[k] - 1) + k];
+                    break;
+                case -1:
+                    hash ^= hashpool[730 + 120 * (b->piece[k] - 1) + k];
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    for(int i = 0; i < 4; i++) {
+        if (b->castling_rights[i])
+            hash ^= hashpool[i];
+    }
+    if (b->who == 1)
+        hash ^= hashpool[4];
+    return hash;
+}

@@ -22,6 +22,6 @@ bool cmp_board(board b1, board b2);
 void destroy_board(board b);
 
 //uint64_t hash_piece(int color, int piece, int k);
-//uint64_t hash_board(board b); // gets the hash of the board
+uint64_t hash_board(board b, uint64_t* hashpool); // gets the hash of the board
 
 #endif
