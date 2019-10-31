@@ -1,3 +1,4 @@
+#include "board.h"
 #include "evaluate.h"
 #include "move_generation.h"
 #include "print.h"
@@ -5,6 +6,7 @@
 #include "board.h"
 #include "move.h"
 #include "move_list.h"
+#include "zobrist.h"
 #include "util.h"
 #include <math.h>
 #include <stdbool.h>
@@ -14,14 +16,21 @@
 #include <string.h>
 #include <unistd.h>
 
-// perft test: recursively count all move nodes and checks
-// compare results with https://chessprogramming.org/Perft_Results
-// obviously, since this engine doesn't take "en passant" into account,
-// values are going to differ starting depth 5
+// zobrist hashtable
+z_hashtable z_ht = NULL;
+extern int collisions = 0;
+extern int znodes = 0;
+
+// perft statistics
 int checks = 0;
 int captures = 0;
 int castles = 0;
 int checkmates = 0;
+
+// perft test: recursively count all move nodes and checks
+// compare results with https://chessprogramming.org/Perft_Results
+// obviously, since this engine doesn't take "en passant" into account,
+// values are going to differ starting depth 5
 int perft(board b, int depth, int last_move_type) {
 
     // count various statistics for leaf nodes
@@ -61,7 +70,18 @@ int perft(board b, int depth, int last_move_type) {
 }
 
 // this will make the AI play against itself
-void play_alone(int depth, int duration, bool debug, int threads, int qdepth) {
+// depth: number of plies to look forward in alpha-beta
+// duration: number of plies to self-play
+// debug: should we display more informations ?
+// threads: number of threads to use
+// qdepth: depth of quiescence search (added to depth in alpha-beta)
+void play_alone(int depth, int duration, bool debug, int threads, int qdepth, int seed) {
+    // prepare the zobrist hashtable
+    // max size: 2_000_000_000
+    // because parameters are passed as int ?
+    // static numbers are ints ?
+    z_ht = create_hashtable(1000000, seed);
+
     board b = create_board();
     init_board(b);
     if (debug) {
@@ -72,7 +92,7 @@ void play_alone(int depth, int duration, bool debug, int threads, int qdepth) {
     int w = 0;
     int turn = 0;
     while (!(w = is_game_over(b, true)) && turn < duration) {
-        move m = best_move(b, depth, threads, qdepth);
+        move m = best_move(b, depth, threads, 0, z_ht);
 
         if (!m) {
             if (b->who == 1) {
@@ -106,18 +126,22 @@ void play_alone(int depth, int duration, bool debug, int threads, int qdepth) {
         printf("Draw !\n");
     }
     destroy_board(b);
+    destroy_hashtable(z_ht);
 }
 
 // execute perft test
-void execute_perft(int depth) {
+int execute_perft(int depth) {
+
     board b = create_board();
     init_board(b);
-    printf("nodes: %d\n", perft(b, depth, 0));
+    int nodes = perft(b, depth, 0);
+    printf("nodes: %d\n", nodes);
     printf("checks: %d\n", checks);
     printf("castles: %d\n", castles);
     printf("captures: %d\n", captures);
     printf("checkmates: %d\n", checkmates);
     destroy_board(b);
+    return nodes;
 }
 
 // prompt human for next move
@@ -142,7 +166,7 @@ void play(int color, int depth, int threads, int qdepth) {
     move m = NULL;
     while (!(w = is_game_over(b, true))) {
         if (b->who == color) {
-            m = best_move(b, depth, threads, qdepth);
+            m = best_move(b, depth, threads, qdepth, NULL);
             if (!m) {
                 if (b->who == 1) {
                     printf("White resigns !\n");
@@ -185,7 +209,9 @@ int main(int argc, char* argv[]) {
             printf("No depth !\n");
             return EXIT_FAILURE;
         }
+
         execute_perft(atoi(argv[2]));
+
     } else if(strcmp(argv[1], "play") == 0) {
         if (argc < 3) {
             printf("chess play <depth> <threads>\n");
@@ -202,7 +228,14 @@ int main(int argc, char* argv[]) {
         int depth = atoi(argv[2]);
         int duration = atoi(argv[3]);
         int threads = atoi(argv[4]);
-        play_alone(depth, duration, false, threads, depth);
+        for (int i = 0; i < 2; i++) {
+            collisions = 0;
+            znodes = 0;
+            printf("seed: %d\n", i);
+            play_alone(depth, duration, false, threads, depth, i);
+            printf("collisions: %d\n", collisions);
+            printf("znodes: %d\n\n", znodes);
+        }
     } else {
         printf("Unknown command.\n");
     }

@@ -1,4 +1,5 @@
 #include "evaluate.h"
+#include "zobrist.h"
 #include "print.h"
 #include "board.h"
 #include "move.h"
@@ -14,10 +15,11 @@ typedef struct arg_t {
     int f;
     int depth;
     int qdepth;
+    z_hashtable z_ht;
 } *arg_t;
 
-arg_t create_arg_t(board b, int f, int depth, int qdepth);
+arg_t create_arg_t(board b, int f, int depth, int qdepth, z_hashtable z_ht);
 int is_game_over(board b, bool check_draws);
-int search(board b, int depth, int alpha, int beta, bool quiescent, int qdepth);
+int search(board b, int depth, int alpha, int beta, int qdepth, z_hashtable z_ht);
 void* MTDF(void* input);
-move best_move(board b, int depth, int threads, int qdepth);
+move best_move(board b, int depth, int threads, int qdepth, z_hashtable z_ht);
