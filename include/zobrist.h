@@ -5,20 +5,25 @@
 #include <stdint.h>
 
 typedef struct entry {
-    uint64_t key;
-    int score;
+    int value;
     int depth;
+    uint64_t key;
+    void* payload;
     struct entry* next;
 } *entry;
 
-extern uint64_t* hashpool;
-extern entry* hashtable;
-void init_hashpool();
-void init_hashtable();
-void add_hashtable(entry e);
-entry find_hashtable(uint64_t key);
-void destroy_hashtable();
+typedef struct z_hashtable {
+    uint64_t size;
+    entry* items;
+    uint64_t* hashpool;
+} *z_hashtable;
+
+uint64_t* create_hashpool(int seed);
+z_hashtable create_hashtable(uint64_t size, int seed);
+int add_hashtable(z_hashtable z_ht, entry e);
+entry find_hashtable(z_hashtable z_ht, uint64_t key);
+void destroy_hashtable(z_hashtable ht);
 void destroy_entry(entry e);
-entry create_entry(board b, int depth);
+entry create_entry();
 
 #endif
